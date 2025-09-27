@@ -5,6 +5,7 @@ import os
 DEBUG = False
 ALLOWED_HOSTS = [
     'web-production-43b9.up.railway.app',  # Your actual Railway URL
+    '.railway.app',
     'memohera.com',  # Your GoDaddy domain (when you connect it)
     'www.memohera.com',  # www version
     'localhost',  # For local testing
