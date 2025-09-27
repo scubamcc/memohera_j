@@ -27,11 +27,24 @@ load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&'
 
-# # Handle DEBUG environment variable
-# DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
-
-# # Or with a default fallback
-# DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    print("=== RAILWAY ENVIRONMENT DETECTED ===")
+    
+    # Database
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        print(f"Database URL found: {DATABASE_URL[:30]}...")
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL)
+        }
+    
+    # Security settings
+    SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
+    DEBUG = True  # Keep True until we fix all issues
+    ALLOWED_HOSTS = ['*']
+    
+    print("=== PRODUCTION MODE ACTIVATED ===")
 
 
 # For local development
