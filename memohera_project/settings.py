@@ -36,10 +36,18 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
         'localhost',
         '127.0.0.1'
     ]
-    DEBUG = False
     # SECURITY WARNING: don't run with debug turned on in production!
-    # DEBUG = True
+    DEBUG = True
 
+# CSRF settings for production
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-43b9.up.railway.app',
+    'http://web-production-43b9.up.railway.app',  # Include both HTTP and HTTPS
+]
+
+# Also make sure these are set correctly
+CSRF_COOKIE_SECURE = True  # Only if using HTTPS
+CSRF_COOKIE_HTTPONLY = True
 # Application definition
 
 INSTALLED_APPS = [
