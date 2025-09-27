@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 from dotenv import load_dotenv
 from django.utils.translation import gettext_lazy as _
 
@@ -26,11 +27,16 @@ load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&'
 
-# Handle DEBUG environment variable
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
+# # Handle DEBUG environment variable
+# DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 
-# Or with a default fallback
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# # Or with a default fallback
+# DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+
+# For local development
+DEBUG = True
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Production overrides
 if os.environ.get('RAILWAY_ENVIRONMENT'):
@@ -42,7 +48,12 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
         '127.0.0.1'
     ]
     # SECURITY WARNING: don't run with debug turned on in production!
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 # CSRF settings for production
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-43b9.up.railway.app',
