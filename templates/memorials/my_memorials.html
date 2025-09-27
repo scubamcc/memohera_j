@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load tz %}
+{% load i18n %}
+
+{% block content %}
+<div class="container py-4">
+    <h1>{% trans "My Memorials" %}</h1>
+
+    {% if memorials %}
+        <p class="text-muted mb-4">
+            You have submitted {{ memorials.count }} memorial{{ memorials.count|pluralize }}.
+        </p>
+        
+        <!-- Memorial List -->
+        {% for memorial in memorials %}
+            <div class="memorial-item">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h2 class="memorial-name">{{ memorial.full_name }}</h2>
+                        <p class="memorial-details">
+                            <strong>{{ memorial.country.name }}</strong> | {{ memorial.dob }} – {{ memorial.dod }}
+                        </p>
+                        <p class="memorial-story">{{ memorial.story }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Submitted {{ memorial.created_at|timesince }} ago
+                            </small>
+                            <span class="badge {% if memorial.approved %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                {% if memorial.approved %}
+                                    ✓ {% trans "Approved" %}
+                                {% else %}
+                                    ⏳ {% trans "Pending Approval" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <!-- ADD THE SHARE BUTTON HERE -->
+                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                onclick="shareMemorial({{ memorial.id }})">
+                            <i class="fas fa-share-alt me-1"></i>
+                            Share
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        {% if memorial.image_url %}
+                            <div class="memorial-image-wrapper">
+                                <img src="{{ memorial.image_url.url }}" 
+                                     alt="{{ memorial.full_name }}" 
+                                     class="memorial-image">
+                            </div>
+                        {% else %}
+                            <div class="memorial-image-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{% trans "No Photo" %}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+    {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">{% trans "You haven't submitted any memorials yet." %}</p>
+            <a href="{% url 'create_memorial' %}" class="btn btn-primary">
+                {% trans "Create Your First Memorial" %}
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- ADD STEP 2 JAVASCRIPT HERE -->
+<script>
+function shareMemorial(memorialId) {
+    console.log('Attempting to share memorial:', memorialId);
+    
+    fetch(`/api/memorial/${memorialId}/share-links/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.share_url) {
+                // Copy to clipboard
+                navigator.clipboard.writeText(data.share_url);
+                
+                // Show options to user
+                const shareOptions = `
+Memorial link copied to clipboard!
+
+You can also share on:
+- Facebook: Click OK then select Facebook
+- WhatsApp: Click OK then select WhatsApp
+- Twitter: Click OK then select Twitter
+
+What would you like to do?`;
+                
+                const userChoice = confirm(shareOptions + "\n\nClick OK to open sharing options, Cancel to just use the copied link.");
+                
+                if (userChoice) {
+                    // Show social media options
+                    showSocialShareMenu(data.social_links);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Detailed error:', error);
+            alert('Sorry, sharing is not available right now.');
+        });
+}
+
+function showSocialShareMenu(socialLinks) {
+    const choice = prompt(`Choose sharing option:
+1 - Facebook
+2 - Twitter  
+3 - WhatsApp
+4 - Just use copied link
+
+Enter number (1-4):`);
+    
+    switch(choice) {
+        case '1':
+            window.open(socialLinks.facebook, 'share', 'width=600,height=400');
+            break;
+        case '2':
+            window.open(socialLinks.twitter, 'share', 'width=600,height=400');
+            break;
+        case '3':
+            window.open(socialLinks.whatsapp, 'share', 'width=600,height=400');
+            break;
+        default:
+            alert('Link already copied to clipboard!');
+    }
+}
+</script>
+
+<style>
+.memorial-item {
+    border-bottom: 1px solid #ddd;
+    padding: 2rem 0;
+    margin-bottom: 1rem;
+}
+
+.memorial-item:last-child {
+    border-bottom: none;
+}
+
+.memorial-name {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+.memorial-details {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.memorial-story {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* Better Image Handling */
+.memorial-image-wrapper {
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto;
+    display: block;
+}
+
+.memorial-image {
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    transition: transform 0.2s !important;
+    display: block !important;
+    -webkit-user-select: auto !important;
+    margin: 0 !important;
+    background-color: transparent !important;
+}
+
+.memorial-image:hover {
+    transform: scale(1.02);
+}
+
+.memorial-image-placeholder {
+    width: 100%;
+    max-width: 250px;
+    height: 200px;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    margin: 0 auto;
+}
+
+.memorial-image-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .memorial-image-wrapper,
+    .memorial-image-placeholder {
+        margin-top: 1rem;
+        max-width: 200px;
+    }
+    
+    .memorial-image {
+        height: 150px;
+    }
+    
+    .memorial-image-placeholder {
+        height: 150px;
+    }
+}
+</style>
+{% endblock %}

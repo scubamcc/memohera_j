@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-4">{% trans "About Memorial Heritage" %}</h1>
+                <p class="lead text-muted">
+                    {% trans "Memorial Heritage is your digital sanctuary to remember and celebrate the lives of those who've passed on. Create a beautiful tribute and keep their memory alive—forever." %}
+                </p>
+            </div>
+            
+            <div class="mb-5">
+                <h3 class="mb-3">{% trans " Our Mission" %}</h3>
+                <p>{% blocktrans %}We believe that every life has a story worth telling and remembering. Memorial Heritage provides a respectful, beautiful space where families can create lasting tributes to those they've lost, while connecting family histories and preserving legacies for future generations.{% endblocktrans %}</p>
+            </div>
+            
+            <div class="mb-5">
+                <h3 class="mb-3">What You Can Do</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-heart text-primary me-2"></i>Create Memorials
+                                </h5>
+                                <p class="card-text">Design beautiful memorial pages with photos, stories, and cherished memories.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-users text-primary me-2"></i>Connect Families
+                                </h5>
+                                <p class="card-text">Link family members together and build your family tree with relationship connections.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-search text-primary me-2"></i>Discover Stories
+                                </h5>
+                                <p class="card-text">Browse and search memorials from around the world, discovering inspiring life stories.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-infinity text-primary me-2"></i>Preserve Forever
+                                </h5>
+                                <p class="card-text">Keep memories alive for future generations in a secure, lasting digital sanctuary.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <h3 class="mb-4">Begin Your Journey</h3>
+                <p class="mb-4">Honor their memory. Share their story. Keep their legacy alive.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'create_memorial' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-plus me-2"></i>Create Memorial
+                    </a>
+                    <a href="{% url 'browse' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Memorials
+                    </a>
+                {% else %}
+                    <a href="{% url 'signup' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Join Memorial Heritage
+                    </a>
+                    <a href="{% url 'browse' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Memorials
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

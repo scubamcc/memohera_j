@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load tz %}
+{% load i18n %}
+<!-- Change static text to translatable -->
+<h1>{% trans "Browse Memorials" %}</h1>
+<button type="submit" class="btn btn-primary">{% trans "Search" %}</button>
+<span>{% trans "No memorials found" %}</span>
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1>Create a Memorial</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Basic Memorial Information -->
+        <div style="margin-bottom: 30px;">
+            <h3 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">Memorial Information</h3>
+            
+            {% for field in form %}
+                {% if field.name != 'related_memorial' and field.name != 'relationship_type' %}
+                    <div style="margin-bottom: 15px;">
+                        <label for="{{ field.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px;">
+                            {{ field.label }}{% if field.field.required %} *{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small style="color: #666; display: block; margin-top: 3px;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 3px;">
+                                {{ field.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Family Relationships Section -->
+        {% if enable_family_relationships and user_memorials %}
+            <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #333; margin-bottom: 15px;">
+                    Family Connection (Optional)
+                </h3>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+                    <strong>Connect family members:</strong> If this person is related to someone you've already added, you can create that connection here.
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="{{ form.related_memorial.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px;">
+                            Family Member
+                        </label>
+                        {{ form.related_memorial }}
+                        {% if form.related_memorial.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 3px;">
+                                {{ form.related_memorial.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.relationship_type.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px;">
+                            Relationship
+                        </label>
+                        {{ form.relationship_type }}
+                        {% if form.relationship_type.errors %}
+                            <div style="color: #dc3545; font-size: 14px; margin-top: 3px;">
+                                {{ form.relationship_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <small style="color: #666; display: block; margin-top: 10px;">
+                    <strong>Example:</strong> If you're adding your father and you already have your grandfather's memorial, select your grandfather and choose "Child".
+                </small>
+            </div>
+        {% elif enable_family_relationships %}
+            <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <div style="text-align: center; color: #666;">
+                    <strong>Family Connections:</strong> After you create your first memorial, you'll be able to link family members together when creating additional memorials.
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- Submit Button -->
+        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #eee;">
+            <button type="submit" style="background: #007bff; color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+                Create Memorial
+            </button>
+            <div style="color: #666; font-size: 14px; margin-top: 10px;">
+                Your memorial will be reviewed before being published
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+/* Styling for form elements */
+input[type="text"], input[type="date"], textarea, select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+button:hover {
+    background: #0056b3 !important;
+}
+
+/* Hide country flag icon */
+.country-select-flag, 
+.flag-icon,
+img[src*="flag"] {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    div[style*="grid-template-columns"] {
+        display: block !important;
+    }
+    
+    div[style*="grid-template-columns"] > div {
+        margin-bottom: 15px;
+    }
+}
+</style>
+
+<script>
+// Enable/disable relationship type based on memorial selection
+document.addEventListener('DOMContentLoaded', function() {
+    const relatedMemorial = document.getElementById('{{ form.related_memorial.id_for_label }}');
+    const relationshipType = document.getElementById('{{ form.relationship_type.id_for_label }}');
+    
+    if (relatedMemorial && relationshipType) {
+        function toggleRelationshipType() {
+            if (relatedMemorial.value) {
+                relationshipType.disabled = false;
+                relationshipType.style.opacity = '1';
+            } else {
+                relationshipType.disabled = true;
+                relationshipType.value = '';
+                relationshipType.style.opacity = '0.5';
+            }
+        }
+        
+        relatedMemorial.addEventListener('change', toggleRelationshipType);
+        
+        // Initial state
+        toggleRelationshipType();
+    }
+});
+</script>
+{% endblock %}

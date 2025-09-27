@@ -1,0 +1,504 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Memorial Heritage{% endblock %}</title>
+        <!-- Favicon using your logo -->
+    <link rel="icon" type="image/png" href="{% static 'memohera_logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'memohera_logo.png' %}">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'memohera_logo_32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'memohera_logo_16.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'memohera_logo_180.png' %}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --border-color: #dee2e6;
+            --shadow-light: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 12px rgba(0,0,0,0.15);
+            --border-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--primary-color);
+            background-color: #ffffff;
+        }
+
+        /* Language-specific fonts */
+        {% if LANGUAGE_CODE == 'zh-cn' %}
+        body { 
+            font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', 'Hiragino Sans GB', 'Inter', sans-serif !important; 
+        }
+        {% elif LANGUAGE_CODE == 'ar' %}
+        body { 
+            font-family: 'Tahoma', 'Arial Unicode MS', 'Lucida Sans Unicode', 'Inter', sans-serif !important; 
+        }
+        {% elif LANGUAGE_CODE == 'hi' %}
+        body { 
+            font-family: 'Noto Sans Devanagari', 'Mangal', 'Devanagari Sangam MN', 'Inter', sans-serif !important; 
+        }
+        {% elif LANGUAGE_CODE == 'ja' %}
+        body { 
+            font-family: 'Hiragino Sans', 'ヒラギノ角ゴ ProN W3', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'メイリオ', 'Meiryo', 'Inter', sans-serif !important; 
+        }
+        {% elif LANGUAGE_CODE == 'el' %}
+        body { 
+            font-family: 'Segoe UI', 'Tahoma', 'Arial Unicode MS', 'Times New Roman', 'Inter', sans-serif !important; 
+        }
+        {% elif LANGUAGE_CODE == 'ru' %}
+        body { 
+            font-family: 'Segoe UI', 'PT Sans', 'Liberation Sans', 'Inter', sans-serif !important; 
+        }
+        {% endif %}
+
+        /* Header Styles */
+        .site-header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+            text-decoration: none;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            transition: color 0.2s;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--secondary-color);
+        }
+
+        .navbar-nav .nav-link.active {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Button Styles */
+        .btn {
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            padding: 0.5rem 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-primary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        /* Form Styles */
+        .form-control {
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        /* Card Styles */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            transition: box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* Main Content */
+        .main-content {
+            min-height: calc(100vh - 200px);
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        /* Footer */
+        .site-footer {
+            background-color: var(--light-gray);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+
+        /* Utility Classes */
+        .text-primary-custom { color: var(--primary-color) !important; }
+        .text-secondary-custom { color: var(--secondary-color) !important; }
+        .bg-light-custom { background-color: var(--light-gray) !important; }
+        
+        /* RTL Support for Arabic */
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        [dir="rtl"] .navbar-nav {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .navbar-brand {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        [dir="rtl"] .me-1, [dir="rtl"] .me-2 {
+            margin-left: 0.25rem !important;
+            margin-right: 0 !important;
+        }
+
+        [dir="rtl"] .ms-1, [dir="rtl"] .ms-2 {
+            margin-right: 0.25rem !important;
+            margin-left: 0 !important;
+        }
+
+        [dir="rtl"] .dropdown-menu {
+            left: 0 !important;
+            right: auto !important;
+        }
+
+        [dir="rtl"] .dropdown-menu-end {
+            --bs-position: start !important;
+            left: 0 !important;
+            right: auto !important;
+        }
+
+        [dir="rtl"] .card-body {
+            text-align: right;
+        }
+
+        [dir="rtl"] .form-control {
+            text-align: right;
+        }
+
+        /* Additional RTL enhancements */
+        [dir="rtl"] .container {
+            padding-right: var(--bs-gutter-x, 0.75rem);
+            padding-left: var(--bs-gutter-x, 0.75rem);
+        }
+
+        [dir="rtl"] .navbar-toggler {
+            border: 1px solid transparent;
+        }
+
+        [dir="rtl"] .navbar-collapse {
+            text-align: right;
+        }
+
+        [dir="rtl"] .nav-link {
+            padding-right: 1rem;
+            padding-left: 1rem;
+        }
+
+        [dir="rtl"] .btn {
+            text-align: center;
+        }
+
+        [dir="rtl"] .alert {
+            text-align: right;
+        }
+
+        [dir="rtl"] .text-md-end {
+            text-align: right !important;
+        }
+
+        [dir="rtl"] .language-dropdown .dropdown-item {
+            text-align: right;
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .flag-emoji {
+            margin-left: 8px;
+            margin-right: 0;
+        }
+
+        /* Arabic-specific typography improvements */
+        [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, 
+        [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        [dir="rtl"] p {
+            line-height: 1.8;
+        }
+
+        /* Fix Bootstrap RTL issues */
+        [dir="rtl"] .row {
+            --bs-gutter-x: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: calc(var(--bs-gutter-x) * -0.5);
+            margin-left: calc(var(--bs-gutter-x) * -0.5);
+        }
+
+        [dir="rtl"] .col, [dir="rtl"] .col-md-6 {
+            padding-right: calc(var(--bs-gutter-x) * 0.5);
+            padding-left: calc(var(--bs-gutter-x) * 0.5);
+        }
+
+        /* Enhanced Language Switcher Styles */
+        .language-dropdown {
+            min-width: 220px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border: none;
+            border-radius: 12px;
+        }
+
+        .language-dropdown .dropdown-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .language-dropdown .dropdown-item:hover {
+            background-color: var(--bs-primary-bg-subtle);
+            transform: translateX(2px);
+        }
+
+        .language-dropdown .dropdown-item.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .language-dropdown .dropdown-item.active:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .flag-emoji {
+            font-size: 1.2em;
+            display: inline-block;
+            width: 24px;
+            text-align: center;
+        }
+
+        .language-name {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+
+        .language-code {
+            font-weight: 600;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .dropdown-header {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .main-content {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .language-dropdown {
+                min-width: 180px;
+            }
+            
+            .language-dropdown .dropdown-item {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .flag-emoji {
+                font-size: 1.1em;
+                width: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Header -->
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'about' %}">
+                    <img src="{% static 'memohera_logo.png' %}" alt="Memorial Heritage" height="35" class="me-2">
+                    Memorial Heritage
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" 
+                               href="{% url 'about' %}">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'browse' %}active{% endif %}" 
+                               href="{% url 'browse' %}">
+                                <i class="fas fa-search me-1"></i>Browse
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'create_memorial' %}active{% endif %}" 
+                                   href="{% url 'create_memorial' %}">
+                                    <i class="fas fa-plus me-1"></i>Create Memorial
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'my_memorials' %}active{% endif %}" 
+                                   href="{% url 'my_memorials' %}">
+                                    <i class="fas fa-user me-1"></i>My Memorials
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <ul class="navbar-nav">
+                        {% if user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'my_memorials' %}">
+                                        <i class="fas fa-list me-2"></i>My Memorials
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'login' %}">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'signup' %}">
+                                    <i class="fas fa-user-plus me-1"></i>Sign Up
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <!-- Enhanced Language Switcher -->
+                        {% include 'partials/language_switcher.html' %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content flex-grow-1">
+        {% if messages %}
+            <div class="container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-primary-custom">Memorial Heritage</h5>
+                    <p class="text-muted">Honoring memories, preserving legacies.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        &copy; {% now "Y" %} Memorial Heritage. All rights reserved.
+                    </p>
+                    <small class="text-muted">
+                        Made with <i class="fas fa-heart text-danger"></i> for remembrance
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

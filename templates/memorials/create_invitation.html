@@ -1,0 +1,232 @@
+<!-- templates/memorials/create_invitation.html -->
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Create Sharing Invitation" %} - Memorial Heritage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-share-alt me-2"></i>
+                        {% trans "Create Sharing Invitation" %}
+                    </h4>
+                    <small>{% trans "Premium Feature - Share memorial creation with others" %}</small>
+                </div>
+                
+                <div class="card-body">
+                    <form id="invitationForm" method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Invitation Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{% trans "Invitation Type" %}</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card invitation-type-card" data-type="create">
+                                        <div class="card-body text-center">
+                                            <input type="radio" name="invitation_type" value="create" id="type_create" checked class="d-none">
+                                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+                                            <h6>{% trans "Create Memorial" %}</h6>
+                                            <small class="text-muted">
+                                                {% trans "Allow someone to create a new memorial" %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card invitation-type-card" data-type="collaborate">
+                                        <div class="card-body text-center">
+                                            <input type="radio" name="invitation_type" value="collaborate" id="type_collaborate" class="d-none">
+                                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                            <h6>{% trans "Collaborate" %}</h6>
+                                            <small class="text-muted">
+                                                {% trans "Collaborate on existing memorial" %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Memorial Selection (for collaboration) -->
+                        <div id="memorialSelection" class="mb-3" style="display: none;">
+                            <label for="memorial_id" class="form-label">{% trans "Select Memorial to Collaborate On" %}</label>
+                            <select name="memorial_id" id="memorial_id" class="form-select">
+                                <option value="">{% trans "Choose a memorial..." %}</option>
+                                {% for memorial in memorials %}
+                                    <option value="{{ memorial.id }}">{{ memorial.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Email (Optional) -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                {% trans "Recipient Email" %} <small class="text-muted">({% trans "optional" %})</small>
+                            </label>
+                            <input type="email" name="email" id="email" class="form-control" 
+                                   placeholder="{% trans 'Enter email to send invitation directly' %}">
+                            <small class="text-muted">
+                                {% trans "Leave blank to only generate a shareable link" %}
+                            </small>
+                        </div>
+                        
+                        <!-- Personal Message -->
+                        <div class="mb-4">
+                            <label for="message" class="form-label">
+                                {% trans "Personal Message" %} <small class="text-muted">({% trans "optional" %})</small>
+                            </label>
+                            <textarea name="message" id="message" class="form-control" rows="3"
+                                      placeholder="{% trans 'Add a personal message for the recipient...' %}"></textarea>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-share-alt me-2"></i>
+                                {% trans "Create Invitation" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div id="invitationResults" class="card mt-4" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {% trans "Invitation Created Successfully!" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">{% trans "Share this link with your recipient:" %}</p>
+                    <div class="input-group mb-3">
+                        <input type="text" id="invitationUrl" class="form-control" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copyInvitationBtn">
+                            <i class="fas fa-copy me-1"></i>{% trans "Copy" %}
+                        </button>
+                    </div>
+                    
+                    <!-- Social Sharing for Invitation -->
+                    <div class="mt-3">
+                        <p class="mb-2">{% trans "Or share via:" %}</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" id="shareWhatsApp">
+                                <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" id="shareEmail">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.invitation-type-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #e9ecef;
+}
+
+.invitation-type-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.invitation-type-card.active {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('invitationForm');
+    const typeCards = document.querySelectorAll('.invitation-type-card');
+    const memorialSelection = document.getElementById('memorialSelection');
+    const resultsSection = document.getElementById('invitationResults');
+    
+    // Handle invitation type selection
+    typeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const type = this.dataset.type;
+            
+            // Update radio button
+            document.querySelector(`#type_${type}`).checked = true;
+            
+            // Update visual selection
+            typeCards.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show/hide memorial selection
+            if (type === 'collaborate') {
+                memorialSelection.style.display = 'block';
+            } else {
+                memorialSelection.style.display = 'none';
+            }
+        });
+    });
+    
+    // Set initial state
+    document.querySelector('.invitation-type-card[data-type="create"]').classList.add('active');
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Creating..." %}';
+        submitBtn.disabled = true;
+        
+        fetch('{% url "create_sharing_invitation" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show results
+                document.getElementById('invitationUrl').value = data.invitation_url;
+                resultsSection.style.display = 'block';
+                
+                // Setup sharing buttons
+                setupSharingButtons(data.invitation_url);
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('{% trans "Error creating invitation" %}');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('{% trans "Error creating invitation" %}');
+        })
+        .finally(() => {
+            // Reset button
+            submitBtn.innerHTML = '<i class="fas fa-share-alt me-2"></i>{% trans "Create Invitation" %}';
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // Copy invitation URL
+    document.getElementById('copyInvitationBtn').addEventListener('click', function() {
+        const urlInput = document.getElementById('invitationUrl');
+        urlInput.select();
+        navigator.clipboard.writeText(urlInput.value).then(() => {
+            this.innerHTML = '<i class="fas fa-check me-1"></i>

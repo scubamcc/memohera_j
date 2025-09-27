@@ -1,0 +1,326 @@
+<!-- templates/memorials/partials/memorial_sharing.html -->
+{% load i18n %}
+
+<div class="memorial-sharing-section mt-4 pt-4 border-top">
+    <div class="row">
+        <div class="col-md-8">
+            <h5 class="mb-3">
+                <i class="fas fa-share-alt me-2 text-primary"></i>
+                {% trans "Share this Memorial" %}
+            </h5>
+            
+            <!-- Social Sharing Buttons -->
+            <div class="social-sharing-buttons mb-3">
+                <div class="btn-group flex-wrap" role="group">
+                    <!-- Facebook -->
+                    <button type="button" class="btn btn-outline-primary share-btn me-2 mb-2" 
+                            data-platform="facebook" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Share on Facebook' %}">
+                        <i class="fab fa-facebook-f me-1"></i>
+                        <span class="d-none d-sm-inline">Facebook</span>
+                    </button>
+                    
+                    <!-- Twitter -->
+                    <button type="button" class="btn btn-outline-info share-btn me-2 mb-2" 
+                            data-platform="twitter" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Share on Twitter' %}">
+                        <i class="fab fa-twitter me-1"></i>
+                        <span class="d-none d-sm-inline">Twitter</span>
+                    </button>
+                    
+                    <!-- WhatsApp -->
+                    <button type="button" class="btn btn-outline-success share-btn me-2 mb-2" 
+                            data-platform="whatsapp" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Share on WhatsApp' %}">
+                        <i class="fab fa-whatsapp me-1"></i>
+                        <span class="d-none d-sm-inline">WhatsApp</span>
+                    </button>
+                    
+                    <!-- LinkedIn -->
+                    <button type="button" class="btn btn-outline-dark share-btn me-2 mb-2" 
+                            data-platform="linkedin" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Share on LinkedIn' %}">
+                        <i class="fab fa-linkedin-in me-1"></i>
+                        <span class="d-none d-sm-inline">LinkedIn</span>
+                    </button>
+                    
+                    <!-- Email -->
+                    <button type="button" class="btn btn-outline-secondary share-btn me-2 mb-2" 
+                            data-platform="email" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Share via Email' %}">
+                        <i class="fas fa-envelope me-1"></i>
+                        <span class="d-none d-sm-inline">{% trans "Email" %}</span>
+                    </button>
+                    
+                    <!-- Copy Link -->
+                    <button type="button" class="btn btn-outline-warning copy-link-btn me-2 mb-2" 
+                            data-memorial-id="{{ memorial.id }}"
+                            title="{% trans 'Copy Link' %}">
+                        <i class="fas fa-link me-1"></i>
+                        <span class="copy-text">{% trans "Copy Link" %}</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Share URL Display -->
+            <div class="share-url-container" style="display: none;">
+                <label class="form-label small text-muted">{% trans "Memorial Link" %}</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm share-url-input" readonly>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="copyUrlBtn">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Share Statistics -->
+            {% if memorial.share_count > 0 %}
+                <div class="share-stats text-center">
+                    <div class="stat-circle">
+                        <div class="stat-number">{{ memorial.share_count }}</div>
+                        <div class="stat-label">{% trans "Times Shared" %}</div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- QR Code (Optional) -->
+            <div class="qr-code-section text-center mt-3">
+                <button type="button" class="btn btn-light btn-sm" onclick="toggleQRCode()">
+                    <i class="fas fa-qrcode me-1"></i>
+                    {% trans "Show QR Code" %}
+                </button>
+                <div id="qrCodeContainer" class="mt-2" style="display: none;">
+                    <!-- QR code will be generated here -->
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode fa-3x text-muted"></i>
+                        <p class="small text-muted mt-2">{% trans "QR code for easy mobile sharing" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Sharing Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.share-btn');
+    const copyLinkBtn = document.querySelector('.copy-link-btn');
+    const shareUrlContainer = document.querySelector('.share-url-container');
+    const shareUrlInput = document.querySelector('.share-url-input');
+    
+    // Handle social media sharing
+    shareButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const platform = this.dataset.platform;
+            const memorialId = this.dataset.memorialId;
+            
+            // Show loading state
+            const originalContent = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+            
+            // Get sharing links from server
+            fetch(`/api/memorial/${memorialId}/share-links/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.social_links && data.social_links[platform]) {
+                        const shareUrl = data.social_links[platform];
+                        
+                        if (platform === 'email') {
+                            // For email, use mailto: directly
+                            window.location.href = shareUrl;
+                        } else {
+                            // For social platforms, open in popup
+                            const popup = window.open(
+                                shareUrl,
+                                'share',
+                                'width=600,height=400,scrollbars=yes,resizable=yes'
+                            );
+                            
+                            if (popup) {
+                                popup.focus();
+                            } else {
+                                // Fallback if popup is blocked
+                                window.open(shareUrl, '_blank');
+                            }
+                        }
+                        
+                        // Show success feedback
+                        this.classList.remove('btn-outline-' + this.className.split('btn-outline-')[1].split(' ')[0]);
+                        this.classList.add('btn-success');
+                        setTimeout(() => {
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline-' + platform === 'facebook' ? 'primary' : 
+                                              platform === 'twitter' ? 'info' :
+                                              platform === 'whatsapp' ? 'success' :
+                                              platform === 'linkedin' ? 'dark' : 'secondary');
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting share links:', error);
+                    alert('{% trans "Sorry, unable to share at this time." %}');
+                })
+                .finally(() => {
+                    // Reset button
+                    this.innerHTML = originalContent;
+                    this.disabled = false;
+                });
+        });
+    });
+    
+    // Handle copy link functionality
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', function() {
+            const memorialId = this.dataset.memorialId;
+            const originalContent = this.innerHTML;
+            
+            fetch(`/api/memorial/${memorialId}/share-links/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.share_url) {
+                        // Show the URL input
+                        shareUrlInput.value = data.share_url;
+                        shareUrlContainer.style.display = 'block';
+                        
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(data.share_url)
+                            .then(() => {
+                                // Show success feedback
+                                this.innerHTML = '<i class="fas fa-check me-1"></i><span class="copy-text">{% trans "Copied!" %}</span>';
+                                this.classList.remove('btn-outline-warning');
+                                this.classList.add('btn-success');
+                                
+                                setTimeout(() => {
+                                    this.innerHTML = originalContent;
+                                    this.classList.remove('btn-success');
+                                    this.classList.add('btn-outline-warning');
+                                }, 3000);
+                            })
+                            .catch(() => {
+                                // Fallback for older browsers
+                                shareUrlInput.select();
+                                document.execCommand('copy');
+                                alert('{% trans "Link copied to clipboard!" %}');
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting share link:', error);
+                    alert('{% trans "Sorry, unable to copy link at this time." %}');
+                });
+        });
+    }
+});
+
+// QR Code toggle function
+function toggleQRCode() {
+    const qrContainer = document.getElementById('qrCodeContainer');
+    if (qrContainer.style.display === 'none') {
+        qrContainer.style.display = 'block';
+        // Here you could integrate a QR code library like qrcode.js
+        // For now, we just show a placeholder
+    } else {
+        qrContainer.style.display = 'none';
+    }
+}
+</script>
+
+<!-- CSS for Sharing Section -->
+<style>
+.memorial-sharing-section {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 2rem;
+}
+
+.social-sharing-buttons .btn {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.social-sharing-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.share-stats {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.qr-placeholder {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 2px dashed #dee2e6;
+}
+
+.share-url-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .social-sharing-buttons .btn {
+        margin-bottom: 8px;
+        width: 100%;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .memorial-sharing-section {
+        padding: 15px;
+    }
+}
+
+/* RTL support */
+[dir="rtl"] .memorial-sharing-section {
+    text-align: right;
+}
+
+[dir="rtl"] .social-sharing-buttons {
+    direction: rtl;
+}
+</style>

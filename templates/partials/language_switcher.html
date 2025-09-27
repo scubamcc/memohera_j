@@ -1,0 +1,193 @@
+<!-- templates/partials/language_switcher.html -->
+{% load i18n %}
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" 
+       data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-globe me-1"></i>
+        <span class="language-code">{{ CURRENT_LANGUAGE_CODE|default:CURRENT_LANGUAGE|upper }}</span>
+    </a>
+    
+    <ul class="dropdown-menu dropdown-menu-end language-dropdown">
+        <li class="dropdown-header">
+            <i class="fas fa-globe me-2"></i>{% trans "Choose Language" %}
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        
+        {% if LANGUAGES_WITH_FLAGS %}
+            {% for lang_info in LANGUAGES_WITH_FLAGS %}
+                <li>
+                    <a class="dropdown-item language-option {% if lang_info.is_current %}active{% endif %}" 
+                       href="#" 
+                       onclick="switchLanguage('{{ lang_info.code }}'); return false;"
+                       data-lang="{{ lang_info.code }}">
+                        <span class="language-code-badge">{{ lang_info.display_code|default:lang_info.code|upper }}</span>
+                        <span class="language-name">{{ lang_info.name }}</span>
+                        {% if lang_info.is_current %}
+                            <i class="fas fa-check text-success ms-auto"></i>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        {% else %}
+            <!-- Fallback if context processor isn't working -->
+            {% get_available_languages as LANGUAGES %}
+            {% get_current_language as CURRENT_LANG %}
+            {% for lang_code, lang_name in LANGUAGES %}
+                <li>
+                    <a class="dropdown-item {% if lang_code == CURRENT_LANG %}active{% endif %}" 
+                       href="#" 
+                       onclick="switchLanguage('{{ lang_code }}'); return false;">
+                        <span class="language-code-badge">{{ lang_code|upper }}</span>
+                        <span class="language-name">{{ lang_name }}</span>
+                        {% if lang_code == CURRENT_LANG %}
+                            <i class="fas fa-check text-success ms-auto"></i>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        {% endif %}
+        
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <small class="dropdown-item-text text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                {% trans "Language preference is saved automatically" %}
+            </small>
+        </li>
+    </ul>
+</li>
+
+<script>
+function switchLanguage(langCode) {
+    console.log('Switching to language:', langCode);
+    
+    // Show loading state
+    const dropdown = document.getElementById('languageDropdown');
+    if (dropdown) {
+        const originalContent = dropdown.innerHTML;
+        dropdown.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {% trans "Switching..." %}';
+    }
+    
+    // Get current path
+    let path = window.location.pathname;
+    let search = window.location.search;
+    
+    // Remove existing language prefix
+    const pathSegments = path.split('/').filter(segment => segment);
+    const supportedLanguages = ['en', 'zh-cn', 'es', 'ar', 'fr', 'de', 'pt', 'ru', 'ja', 'hi', 'el'];
+    
+    if (pathSegments.length > 0 && supportedLanguages.includes(pathSegments[0])) {
+        pathSegments.shift(); // Remove current language code
+    }
+    
+    // Build new path
+    let newPath = '';
+    if (langCode !== 'en') {  // Don't add prefix for English
+        newPath = '/' + langCode;
+    }
+    
+    if (pathSegments.length > 0) {
+        newPath += '/' + pathSegments.join('/');
+    }
+    
+    if (!newPath || newPath === '/') {
+        newPath = '/';
+    }
+    
+    // Add search parameters if they exist
+    if (search) {
+        newPath += search;
+    }
+    
+    // Navigate to new URL
+    window.location.href = newPath;
+}
+
+// Initialize dropdown behavior when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const languageDropdown = document.getElementById('languageDropdown');
+    if (languageDropdown) {
+        // Ensure Bootstrap dropdown is properly initialized
+        if (typeof bootstrap !== 'undefined') {
+            new bootstrap.Dropdown(languageDropdown);
+        }
+        
+        // Add keyboard support
+        languageDropdown.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.language-dropdown {
+    min-width: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: none;
+    border-radius: 12px;
+}
+
+.language-dropdown .dropdown-item {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.language-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+.language-dropdown .dropdown-item.active {
+    background-color: var(--secondary-color, #3498db);
+    color: white;
+}
+
+.language-code-badge {
+    background-color: var(--secondary-color, #3498db);
+    color: white;
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 8px;
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.dropdown-item.active .language-code-badge {
+    background-color: white;
+    color: var(--secondary-color, #3498db);
+}
+
+.language-name {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+.language-code {
+    font-weight: 600;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+    color: var(--secondary-color, #3498db);
+}
+
+.dropdown-header {
+    font-weight: 600;
+    color: var(--secondary-color, #3498db);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+</style>
