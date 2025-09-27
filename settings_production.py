@@ -3,7 +3,13 @@ import os
 
 # Production settings
 DEBUG = False
-ALLOWED_HOSTS = ['.railway.app', 'your-domain.com']  # Railway will auto-populate
+ALLOWED_HOSTS = [
+    'web-production-43b9.up.railway.app',  # Your actual Railway URL
+    'memohera.com',  # Your GoDaddy domain (when you connect it)
+    'www.memohera.com',  # www version
+    'localhost',  # For local testing
+    '127.0.0.1'  # For local testing
+]
 
 # Database for production (Railway will provide this)
 import dj_database_url
