@@ -15,11 +15,11 @@ import os
 import dj_database_url
 from django.utils.translation import gettext_lazy as _
 # Replace the dotenv import with:
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass  # dotenv not available, skip loading .env file
+# try:
+#     from dotenv import load_dotenv
+#     load_dotenv()
+# except ImportError:
+#     pass  # dotenv not available, skip loading .env file
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
