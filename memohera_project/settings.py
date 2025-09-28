@@ -35,10 +35,11 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     if DATABASE_URL:
         print(f"Database URL found: {DATABASE_URL[:30]}...")
         DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': '/tmp/db.sqlite3',  # Use /tmp for Railway's ephemeral storage
-            }
+                    'default': {
+                        'ENGINE': 'django.db.backends.sqlite3',
+                        'NAME': '/tmp/db.sqlite3',  # Use /tmp for Railway's ephemeral storage
+                    }
+        }
     
     # Security settings
     SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
