@@ -14,16 +14,17 @@ from pathlib import Path
 import os
 import dj_database_url
 from django.utils.translation import gettext_lazy as _
-# Replace the dotenv import with:
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass  # dotenv not available, skip loading .env file
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
+
+# Load environment variables safely
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
+except ImportError:
+    pass  # dotenv not available, skip loading .env file
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
