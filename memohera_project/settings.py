@@ -53,11 +53,9 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
 
     # Static files for production
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    
-    # Add WhiteNoise for serving static files
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
+   
     print("=== PRODUCTION MODE ACTIVATED ===")
 
 
@@ -107,6 +105,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add directly here
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
