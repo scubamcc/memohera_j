@@ -45,6 +45,13 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
     DEBUG = True  # Keep True until we fix all issues
     ALLOWED_HOSTS = ['*']
+
+    # Static files for production
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    
+    # Add WhiteNoise for serving static files
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
     print("=== PRODUCTION MODE ACTIVATED ===")
 
@@ -53,22 +60,23 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
 DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
-# Production overrides
-if os.environ.get('RAILWAY_ENVIRONMENT'):
-    ALLOWED_HOSTS = [
-        'web-production-43b9.up.railway.app',
-        '.railway.app',
-        '.up.railway.app',  # Add this too
-        'localhost',
-        '127.0.0.1'
-    ]
-    # SECURITY WARNING: don't run with debug turned on in production!
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# # Production overrides
+# if os.environ.get('RAILWAY_ENVIRONMENT'):
+#     ALLOWED_HOSTS = [
+#         'web-production-43b9.up.railway.app',
+#         '.railway.app',
+#         '.up.railway.app',  # Add this too
+#         'localhost',
+#         '127.0.0.1'
+#     ]
+#     # SECURITY WARNING: don't run with debug turned on in production!
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 # CSRF settings for production
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-43b9.up.railway.app',
