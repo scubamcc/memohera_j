@@ -61,8 +61,12 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
 
 # For local development
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'memoheraj-production.up.railway.app',
+    '.railway.app',  # This allows all Railway subdomains
+]
 # # Production overrides
 # if os.environ.get('RAILWAY_ENVIRONMENT'):
 #     ALLOWED_HOSTS = [
