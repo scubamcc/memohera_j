@@ -58,7 +58,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
    
     print("=== PRODUCTION MODE ACTIVATED ===")
 
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # For local development
 DEBUG = True
 ALLOWED_HOSTS = [
