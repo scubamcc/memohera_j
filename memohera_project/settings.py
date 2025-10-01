@@ -30,55 +30,9 @@ except ImportError:
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&')
 
-
-if os.environ.get('RAILWAY_ENVIRONMENT'):
-    print("=== RAILWAY ENVIRONMENT DETECTED ===")
-    
-    # Database
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-    if DATABASE_URL:
-        print(f"Database URL found: {DATABASE_URL[:30]}...")
-        DATABASES = {
-                    'default': {
-                        'ENGINE': 'django.db.backends.sqlite3',
-                        'NAME': '/tmp/db.sqlite3',  # Use /tmp for Railway's ephemeral storage
-                    }
-        }
-    
-    # Security settings
-    SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
-    DEBUG = True  # Keep True until we fix all issues
-    ALLOWED_HOSTS = ['*']
-
-    # Static files for production
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-    
-   
-    print("=== PRODUCTION MODE ACTIVATED ===")
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# For local development
-DEBUG = True
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'memoheraj-production.up.railway.app',
-    '.railway.app',  # This allows all Railway subdomains
-]
-# CSRF settings for production
-CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-43b9.up.railway.app',
-    'http://web-production-43b9.up.railway.app',  # Include both HTTP and HTTPS
-]
-
-# Also make sure these are set correctly
-CSRF_COOKIE_SECURE = True  # Only if using HTTPS
-CSRF_COOKIE_HTTPONLY = True
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -93,8 +47,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add directly here
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -115,34 +70,16 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'memorials.context_processors.language_context',  # Add this line
+                'memorials.context_processors.language_context',
             ],
         },
     },
 ]
 
-
-
-
-
-
 WSGI_APPLICATION = 'memohera_project.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -158,7 +95,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Cloudinary credentials
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -166,90 +102,69 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-ENABLE_FAMILY_RELATIONSHIPS = True  # Easy on/off switch
+ENABLE_FAMILY_RELATIONSHIPS = True
 AUTO_APPROVE_MEMORIALS = True
 
 LANGUAGES = [
     ('en', _('English')),
-    ('zh-cn', _('中文 (简体)')),    # Chinese Simplified - correct code
-    ('es', _('Español')),          # Spanish
-    ('ar', _('العربية')),           # Arabic
-    ('fr', _('Français')),         # French
-    ('de', _('Deutsch')),          # German
-    ('pt', _('Português (Brasil)')),  # Portuguese - use 'pt' instead of 'pt_BR'
-    ('ru', _('Русский')),          # Russian
-    ('ja', _('日本語')),            # Japanese
-    ('hi', _('हिन्दी')),            # Hindi
-    ('el', _('Ελληνικά')),  # Greek
+    ('zh-cn', _('中文 (简体)')),
+    ('es', _('Español')),
+    ('ar', _('العربية')),
+    ('fr', _('Français')),
+    ('de', _('Deutsch')),
+    ('pt', _('Português (Brasil)')),
+    ('ru', _('Русский')),
+    ('ja', _('日本語')),
+    ('hi', _('हिन्दी')),
+    ('el', _('Ελληνικά')),
 ]
 
-# Also update the flags mapping:
 LANGUAGE_FLAGS = {
     'en': '🇺🇸',
-    'zh-cn': '🇨🇳',   # Updated
+    'zh-cn': '🇨🇳',
     'es': '🇪🇸',
     'ar': '🇸🇦',
     'fr': '🇫🇷',
     'de': '🇩🇪',
-    'pt': '🇧🇷',      # Updated
+    'pt': '🇧🇷',
     'ru': '🇷🇺',
     'ja': '🇯🇵',
     'hi': '🇮🇳',
-    'el': '🇬🇷',  # Greek flag
+    'el': '🇬🇷',
 }
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = '/static/'
-
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'create_memorial'   # after login
-LOGOUT_REDIRECT_URL = 'about'         # after logout
-
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",  # ← This points to memohera_j/static/
-]
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Add these to your settings.py
-
-
-
 
 # Path where translation files will be stored
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # This should be after SessionMiddleware
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
 ]
 
+# Auth settings
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'create_memorial'
+LOGOUT_REDIRECT_URL = 'about'
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Environment-specific settings
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     print("=== RAILWAY ENVIRONMENT DETECTED ===")
     print(f"BASE_DIR: {BASE_DIR}")
@@ -263,7 +178,6 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     print(f"Static dir exists: {static_dir.exists()}")
     
     if static_dir.exists():
-        import os
         files = os.listdir(static_dir)
         print(f"Files in static/: {files}")
     
@@ -271,4 +185,60 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     print(f"STATIC_ROOT exists: {os.path.exists(STATIC_ROOT)}")
     if os.path.exists(STATIC_ROOT):
         files = os.listdir(STATIC_ROOT)
-        print(f"Files in staticfiles/: {files[:10]}")  # First 10 files
+        print(f"Files in staticfiles/: {files[:10]}")
+    
+    # Check if manifest file exists
+    manifest_path = os.path.join(STATIC_ROOT, 'staticfiles.json')
+    print(f"Manifest exists: {os.path.exists(manifest_path)}")
+    if os.path.exists(manifest_path):
+        with open(manifest_path, 'r') as f:
+            import json
+            manifest = json.load(f)
+            print(f"Logo in manifest: {'memohera_logo_180.png' in manifest.get('paths', {})}")
+    
+    # Database
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        print(f"Database URL found: {DATABASE_URL[:30]}...")
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': '/tmp/db.sqlite3',
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+    
+    # Security settings
+    SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
+    DEBUG = False
+    ALLOWED_HOSTS = ['.railway.app', 'memoheraj-production.up.railway.app']
+    
+    # CSRF settings for production
+    CSRF_TRUSTED_ORIGINS = [
+        'https://memoheraj-production.up.railway.app',
+        'https://*.railway.app',
+    ]
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    
+    # Use simpler WhiteNoise storage (without manifest)
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    
+    print("=== PRODUCTION MODE ACTIVATED ===")
+else:
+    # Local development settings
+    print("=== LOCAL DEVELOPMENT MODE ===")
+    DEBUG = True
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
