@@ -68,8 +68,16 @@ class MemorialForm(forms.ModelForm):
             raise forms.ValidationError("Date of death cannot be in the future.")
         return dod
     
+    def clean_dob(self):
+        dob = self.cleaned_data.get('dob')
+        if dob and dob > datetime.date.today():
+            raise forms.ValidationError("Date of birth cannot be in the future.")
+        return dob
+    
     def clean(self):
         cleaned_data = super().clean()
+        dob = cleaned_data.get('dob')  # Get dob from cleaned_data
+        dod = cleaned_data.get('dod')  # Get dod from cleaned_data
         related_memorial = cleaned_data.get('related_memorial')
         relationship_type = cleaned_data.get('relationship_type')
         
@@ -80,4 +88,8 @@ class MemorialForm(forms.ModelForm):
         if relationship_type and not related_memorial:
             raise forms.ValidationError("Please select a family member.")
         
+        if dob and dod:
+            if dod < dob:
+                raise forms.ValidationError('Date of death cannot be before date of birth.')
+
         return cleaned_data
