@@ -207,14 +207,14 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     #         }
     #     }
     if DATABASE_URL:
-    print(f"Database URL found: {DATABASE_URL[:30]}...")
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+        print(f"Database URL found: {DATABASE_URL[:30]}...")
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
     else:
         DATABASES = {
             'default': {
