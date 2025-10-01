@@ -76,57 +76,21 @@ function shareMemorial(memorialId) {
     fetch(`/api/memorial/${memorialId}/share-links/`)
         .then(response => response.json())
         .then(data => {
-            if (data.share_url) {
+            if (data.share_url && data.social_links && data.social_links.facebook) {
                 // Copy to clipboard
                 navigator.clipboard.writeText(data.share_url);
                 
-                // Show options to user
-                const shareOptions = `
-Memorial link copied to clipboard!
-
-You can also share on:
-- Facebook: Click OK then select Facebook
-- WhatsApp: Click OK then select WhatsApp
-- Twitter: Click OK then select Twitter
-
-What would you like to do?`;
+                // Show simple confirmation and open Facebook
+                // alert('Memorial link copied to clipboard!');
                 
-                const userChoice = confirm(shareOptions + "\n\nClick OK to open sharing options, Cancel to just use the copied link.");
-                
-                if (userChoice) {
-                    // Show social media options
-                    showSocialShareMenu(data.social_links);
-                }
+                // Open Facebook share dialog
+                window.open(data.social_links.facebook, 'share', 'width=600,height=400');
             }
         })
         .catch(error => {
             console.error('Detailed error:', error);
             alert('Sorry, sharing is not available right now.');
         });
-}
-
-function showSocialShareMenu(socialLinks) {
-    const choice = prompt(`Choose sharing option:
-1 - Facebook
-2 - Twitter  
-3 - WhatsApp
-4 - Just use copied link
-
-Enter number (1-4):`);
-    
-    switch(choice) {
-        case '1':
-            window.open(socialLinks.facebook, 'share', 'width=600,height=400');
-            break;
-        case '2':
-            window.open(socialLinks.twitter, 'share', 'width=600,height=400');
-            break;
-        case '3':
-            window.open(socialLinks.whatsapp, 'share', 'width=600,height=400');
-            break;
-        default:
-            alert('Link already copied to clipboard!');
-    }
 }
 </script>
 
