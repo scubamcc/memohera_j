@@ -11,8 +11,16 @@ class Command(BaseCommand):
         email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@memohera.com')
         password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'Ayy>2U;DgW!Bm4HB4F|$')
         
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(username=username, email=email, password=password)
-            self.stdout.write(self.style.SUCCESS(f'Superuser {username} created successfully'))
+        if not password:
+            self.stdout.write(self.style.ERROR('DJANGO_SUPERUSER_PASSWORD environment variable is required'))
+            return
+        
+        if User.objects.filter(username=username).exists():
+            self.stdout.write(self.style.WARNING(f'Superuser "{username}" already exists'))
         else:
-            self.stdout.write(self.style.WARNING(f'Superuser {username} already exists'))
+            User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=password
+            )
+            self.stdout.write(self.style.SUCCESS(f'Superuser "{username}" created successfully'))
