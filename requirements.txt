@@ -18,3 +18,4 @@ urllib3==2.5.0
 whitenoise==6.11.0
 cloudinary==1.36.0
 django-cloudinary-storage==0.3.0
+Faker==22.0.0
