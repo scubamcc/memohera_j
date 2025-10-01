@@ -32,6 +32,48 @@ except ImportError:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&'
 
+
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    print("=== RAILWAY ENVIRONMENT DETECTED ===")
+    print(f"BASE_DIR: {BASE_DIR}")
+    print(f"STATIC_ROOT: {STATIC_ROOT}")
+    print(f"STATIC_URL: {STATIC_URL}")
+    print(f"STATICFILES_DIRS: {STATICFILES_DIRS}")
+    
+    # Check if static directory exists and list contents
+    static_dir = BASE_DIR / 'static'
+    print(f"Static dir path: {static_dir}")
+    print(f"Static dir exists: {static_dir.exists()}")
+    
+    if static_dir.exists():
+        import os
+        files = os.listdir(static_dir)
+        print(f"Files in static/: {files}")
+    
+    # Check staticfiles after collection
+    print(f"STATIC_ROOT exists: {os.path.exists(STATIC_ROOT)}")
+    if os.path.exists(STATIC_ROOT):
+        files = os.listdir(STATIC_ROOT)
+        print(f"Files in staticfiles/: {files[:10]}")  # First 10 files
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     print("=== RAILWAY ENVIRONMENT DETECTED ===")
     
