@@ -223,6 +223,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     CSRF_TRUSTED_ORIGINS = [
         'https://memoheraj-production.up.railway.app',
         'https://*.railway.app',
+        'https://www.memohera.com',
     ]
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True
