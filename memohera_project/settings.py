@@ -35,47 +35,6 @@ SECRET_KEY = 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&
 
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     print("=== RAILWAY ENVIRONMENT DETECTED ===")
-    print(f"BASE_DIR: {BASE_DIR}")
-    print(f"STATIC_ROOT: {STATIC_ROOT}")
-    print(f"STATIC_URL: {STATIC_URL}")
-    print(f"STATICFILES_DIRS: {STATICFILES_DIRS}")
-    
-    # Check if static directory exists and list contents
-    static_dir = BASE_DIR / 'static'
-    print(f"Static dir path: {static_dir}")
-    print(f"Static dir exists: {static_dir.exists()}")
-    
-    if static_dir.exists():
-        import os
-        files = os.listdir(static_dir)
-        print(f"Files in static/: {files}")
-    
-    # Check staticfiles after collection
-    print(f"STATIC_ROOT exists: {os.path.exists(STATIC_ROOT)}")
-    if os.path.exists(STATIC_ROOT):
-        files = os.listdir(STATIC_ROOT)
-        print(f"Files in staticfiles/: {files[:10]}")  # First 10 files
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if os.environ.get('RAILWAY_ENVIRONMENT'):
-    print("=== RAILWAY ENVIRONMENT DETECTED ===")
     
     # Database
     DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -109,23 +68,6 @@ ALLOWED_HOSTS = [
     'memoheraj-production.up.railway.app',
     '.railway.app',  # This allows all Railway subdomains
 ]
-# # Production overrides
-# if os.environ.get('RAILWAY_ENVIRONMENT'):
-#     ALLOWED_HOSTS = [
-#         'web-production-43b9.up.railway.app',
-#         '.railway.app',
-#         '.up.railway.app',  # Add this too
-#         'localhost',
-#         '127.0.0.1'
-#     ]
-#     # SECURITY WARNING: don't run with debug turned on in production!
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 # CSRF settings for production
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-43b9.up.railway.app',
@@ -306,3 +248,27 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    print("=== RAILWAY ENVIRONMENT DETECTED ===")
+    print(f"BASE_DIR: {BASE_DIR}")
+    print(f"STATIC_ROOT: {STATIC_ROOT}")
+    print(f"STATIC_URL: {STATIC_URL}")
+    print(f"STATICFILES_DIRS: {STATICFILES_DIRS}")
+    
+    # Check if static directory exists and list contents
+    static_dir = BASE_DIR / 'static'
+    print(f"Static dir path: {static_dir}")
+    print(f"Static dir exists: {static_dir.exists()}")
+    
+    if static_dir.exists():
+        import os
+        files = os.listdir(static_dir)
+        print(f"Files in static/: {files}")
+    
+    # Check staticfiles after collection
+    print(f"STATIC_ROOT exists: {os.path.exists(STATIC_ROOT)}")
+    if os.path.exists(STATIC_ROOT):
+        files = os.listdir(STATIC_ROOT)
+        print(f"Files in staticfiles/: {files[:10]}")  # First 10 files
