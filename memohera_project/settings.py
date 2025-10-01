@@ -225,7 +225,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     
     # Security settings
     SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
-    DEBUG = True
+    DEBUG = False
     ALLOWED_HOSTS = ['.railway.app', 'memoheraj-production.up.railway.app','https://memohera.com', 'https://www.memohera.com',]
     
     # CSRF settings for production
