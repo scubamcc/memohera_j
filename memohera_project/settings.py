@@ -71,10 +71,19 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'memorials.context_processors.language_context',
+                'memorials.context_processors.pending_suggestions_count',  # ADD THIS
             ],
         },
     },
 ]
+
+
+
+
+
+
+
+
 
 WSGI_APPLICATION = 'memohera_project.wsgi.application'
 
@@ -257,3 +266,5 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+

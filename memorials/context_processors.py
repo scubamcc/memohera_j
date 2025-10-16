@@ -2,6 +2,20 @@
 
 from django.conf import settings
 from django.utils.translation import get_language
+from .models import FamilyRelationship
+from django.db.models import Q
+
+def pending_suggestions_count(request):
+    """Add pending suggestions count to all templates"""
+    if request.user.is_authenticated:
+        count = FamilyRelationship.objects.filter(
+            status='pending'
+        ).filter(
+            Q(person_a__created_by=request.user) | Q(person_b__created_by=request.user)
+        ).count()
+        return {'pending_suggestions_count': count}
+    return {'pending_suggestions_count': 0}
+
 
 def language_context(request):
     """

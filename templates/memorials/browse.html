@@ -804,35 +804,46 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Build modal content
-        modalContent.innerHTML = `
-            <div class="row">
-                <div class="col-md-4 text-center mb-4">
-                    ${memorial.image ? 
-                        `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
-                        `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
-                            <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
-                            <span>No Photo</span>
-                        </div>`
-                    }
-                </div>
-                <div class="col-md-8">
-                    <h2 style="font-size: 2rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem;">${memorial.name}</h2>
-                    <div style="color: #3498db; font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem;">${memorial.country}</div>
-                    <div style="color: #6c757d; font-size: 1rem; margin-bottom: 1.5rem;">${memorial.dob} – ${memorial.dod}</div>
-                    
-                    <div style="font-size: 1rem; line-height: 1.7; color: #2c3e50; margin-bottom: 1.5rem;">
-                        ${memorial.story.replace(/\n/g, '<br>')}
-                    </div>
-                    
-                    ${familyConnectionsHtml}
-                    
-                    <div style="font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 1rem; margin-top: 1rem;">
-                        Memorial created on ${memorial.created_date}
-                    </div>
-                </div>
+modalContent.innerHTML = `
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            ${memorial.image ? 
+                `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
+                `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
+                    <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                    <span>No Photo</span>
+                </div>`
+            }
+        </div>
+        <div class="col-md-8">
+            <h2 style="font-size: 2rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem;">${memorial.name}</h2>
+            <div style="color: #3498db; font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem;">${memorial.country}</div>
+            <div style="color: #6c757d; font-size: 1rem; margin-bottom: 1.5rem;">${memorial.dob} – ${memorial.dod}</div>
+            
+            <div style="font-size: 1rem; line-height: 1.7; color: #2c3e50; margin-bottom: 1.5rem;">
+                ${memorial.story.replace(/\n/g, '<br>')}
             </div>
-        `;
+            
+            ${familyConnectionsHtml}
+            
+            <!-- NEW: Action Buttons Section -->
+            {% if user.is_authenticated %}
+            <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
+                    <i class="fas fa-link me-1"></i>Suggest Connection
+                </a>
+                <button class="btn btn-outline-primary btn-sm" onclick="shareMemorial(${memorial.id})">
+                    <i class="fab fa-facebook-square me-1"></i>Share
+                </button>
+            </div>
+            {% endif %}
+            
+            <div style="font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 1rem; margin-top: 1rem;">
+                Memorial created on ${memorial.created_date}
+            </div>
+        </div>
+    </div>
+`;
         
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('memorialModal'));

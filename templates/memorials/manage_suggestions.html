@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Manage Relationship Suggestions - Memorial Heritage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="suggestions-card">
+                <div class="suggestions-header">
+                    <h2><i class="fas fa-tasks me-2"></i>Relationship Suggestions</h2>
+                    <p class="text-muted">Review and approve connections suggested by other users</p>
+                </div>
+
+                {% if pending_suggestions %}
+                    <div class="suggestions-list">
+                        {% for suggestion in pending_suggestions %}
+                            <div class="suggestion-item">
+                                <div class="suggestion-info">
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <div class="memorial-preview">
+                                                {% if suggestion.person_a.image_url %}
+                                                    <img src="{{ suggestion.person_a.image_url.url }}" alt="{{ suggestion.person_a.full_name }}" class="memorial-thumb">
+                                                {% else %}
+                                                    <div class="memorial-thumb-placeholder">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div class="memorial-details">
+                                                    <h5>{{ suggestion.person_a.full_name }}</h5>
+                                                    <small>{{ suggestion.person_a.dob|date:"Y" }} - {{ suggestion.person_a.dod|date:"Y" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-2 text-center relationship-badge">
+                                            <div class="badge bg-primary">
+                                                {{ suggestion.get_relationship_type_display }}
+                                            </div>
+                                            <i class="fas fa-arrows-alt-h mt-2"></i>
+                                        </div>
+                                        
+                                        <div class="col-md-5">
+                                            <div class="memorial-preview">
+                                                {% if suggestion.person_b.image_url %}
+                                                    <img src="{{ suggestion.person_b.image_url.url }}" alt="{{ suggestion.person_b.full_name }}" class="memorial-thumb">
+                                                {% else %}
+                                                    <div class="memorial-thumb-placeholder">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div class="memorial-details">
+                                                    <h5>{{ suggestion.person_b.full_name }}</h5>
+                                                    <small>{{ suggestion.person_b.dob|date:"Y" }} - {{ suggestion.person_b.dod|date:"Y" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="suggestion-meta">
+                                        <p class="mb-2">
+                                            <i class="fas fa-user-circle me-2"></i>
+                                            <strong>Suggested by:</strong> {{ suggestion.suggested_by.username }}
+                                        </p>
+                                        <p class="mb-2">
+                                            <i class="fas fa-clock me-2"></i>
+                                            <strong>Date:</strong> {{ suggestion.created_at|date:"F d, Y" }}
+                                        </p>
+                                        {% if suggestion.suggestion_note %}
+                                            <div class="suggestion-note">
+                                                <i class="fas fa-comment-alt me-2"></i>
+                                                <strong>Note:</strong> {{ suggestion.suggestion_note }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="suggestion-actions">
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ suggestion.id }}">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                    
+                                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ suggestion.id }}">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </div>
+     
+                            </div>
+                        {% endfor %}
+
+                        {% for suggestion in pending_suggestions %}
+
+                          <!-- Approve Modal -->
+                                <div class="modal fade" id="approveModal{{ suggestion.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Approve Family Connection</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to approve this connection?</p>
+                                                <div class="alert alert-info">
+                                                    <strong>{{ suggestion.person_a.full_name }}</strong> - {{ suggestion.get_relationship_type_display }} - <strong>{{ suggestion.person_b.full_name }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="post" action="{% url 'approve_relationship_suggestion' suggestion.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="fas fa-check me-1"></i>Yes, Approve
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal{{ suggestion.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reject Family Connection</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to reject this connection?</p>
+                                                <div class="alert alert-warning">
+                                                    <strong>{{ suggestion.person_a.full_name }}</strong> - {{ suggestion.get_relationship_type_display }} - <strong>{{ suggestion.person_b.full_name }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="post" action="{% url 'reject_relationship_suggestion' suggestion.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fas fa-times me-1"></i>Yes, Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        {% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <h4>No Pending Suggestions</h4>
+                        <p class="text-muted">You don't have any relationship suggestions waiting for your review.</p>
+                        <a href="{% url 'browse' %}" class="btn btn-primary mt-3">
+                            <i class="fas fa-search me-2"></i>Browse Memorials
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.suggestions-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    padding: 2.5rem;
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+}
+
+.suggestions-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.suggestions-header h2 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.suggestion-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.suggestion-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.memorial-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.memorial-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.memorial-thumb-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 1.5rem;
+}
+
+.memorial-details h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.memorial-details small {
+    color: #6b7280;
+}
+
+.relationship-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.relationship-badge .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+}
+
+.relationship-badge i {
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+}
+
+.suggestion-meta {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.suggestion-meta p {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.suggestion-note {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border-left: 3px solid var(--secondary-color);
+}
+
+.suggestion-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.suggestion-actions .btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    color: #d1d5db;
+}
+
+.empty-state h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .suggestions-card {
+        padding: 1.5rem;
+    }
+    
+    .memorial-preview {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .relationship-badge {
+        margin: 1rem 0;
+    }
+    
+    .suggestion-actions {
+        flex-direction: column;
+    }
+    
+    .suggestion-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

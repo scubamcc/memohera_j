@@ -23,7 +23,8 @@ from django.conf.urls.i18n import i18n_patterns
 from memorials.views import (
     home, create_memorial, browse_memorials, about, signup, my_memorials, 
     add_family_relationship, approve_family_relationship, logout_view,
-    memorial_share, get_social_sharing_links
+    memorial_share, get_social_sharing_links,privacy_policy,change_password,edit_memorial,
+    suggest_relationship,manage_relationship_suggestions,approve_relationship_suggestion,reject_relationship_suggestion
 )
 
 urlpatterns = [
@@ -50,6 +51,15 @@ urlpatterns += i18n_patterns(
     # path('logout/', auth_views.LogoutView.as_view(next_page='about'), name='logout'),
     path('logout/', logout_view, name='logout'),
     path('signup/', signup, name='signup'),
+    path('privacy-policy/', privacy_policy, name='privacy_policy'),
+    path('memorial/<int:memorial_id>/edit/', edit_memorial, name='edit_memorial'),
+    
+    # Relationship suggestion URLs
+    path('memorial/<int:memorial_id>/suggest-relationship/', suggest_relationship, name='suggest_relationship'),
+    path('relationship-suggestions/', manage_relationship_suggestions, name='manage_relationship_suggestions'),
+    path('relationship/<int:relationship_id>/approve/', approve_relationship_suggestion, name='approve_relationship_suggestion'),
+    path('relationship/<int:relationship_id>/reject/', reject_relationship_suggestion, name='reject_relationship_suggestion'),
+
 
     # # Sharing URLs
     # path('share/<uuid:share_token>/', memorial_share, name='memorial_share'),
@@ -61,7 +71,7 @@ urlpatterns += i18n_patterns(
     # path('manage-invitations/', manage_invitations, name='manage_invitations'),    
     path('api/memorial/<int:memorial_id>/share-links/', get_social_sharing_links, name='get_social_sharing_links'),
 
-
+    path('change-password/', change_password, name='change_password'),
     prefix_default_language=False,  # Don't add /en/ for English URLs
 )
 

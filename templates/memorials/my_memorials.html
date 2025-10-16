@@ -34,11 +34,25 @@
                             </span>
                         </div>
                         <!-- ADD THE SHARE BUTTON HERE -->
-                        <button type="button" class="btn btn-outline-success btn-sm" 
+                        <!-- <button type="button" class="btn btn-outline-success btn-sm" 
                                 onclick="shareMemorial({{ memorial.id }})">
                             <i class="fas fa-share-alt me-1"></i>
                             Share
+                        </button> -->
+                        <!-- Facebook Share Button -->
+                         <!-- Edit Button -->
+                        <a href="{% url 'edit_memorial' memorial.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>
+                            Edit
+                        </a>
+
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="shareMemorial({{ memorial.id }})">
+                            <i class="fab fa-facebook-square me-1"></i>
+                            <!-- Facebook -->
                         </button>
+
+
                     </div>
                     <div class="col-md-4">
                         {% if memorial.image_url %}

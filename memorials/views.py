@@ -1,5 +1,4 @@
-# Update your views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login as auth_login
@@ -7,7 +6,7 @@ from django.utils.translation import gettext as _
 from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
-from .forms import MemorialForm
+from .forms import MemorialForm, SuggestRelationshipForm
 from .models import Memorial, FamilyRelationship
 from django.db.models import Q
 
@@ -21,6 +20,10 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.core.mail import send_mail
+
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import get_object_or_404
 
 
 
@@ -72,8 +75,60 @@ def create_memorial(request):
         'user_memorials': user_memorials,
         'enable_family_relationships': getattr(settings, 'ENABLE_FAMILY_RELATIONSHIPS', False)
     }
-    messages.success(request, _('Memorial created successfully!'))
+    # messages.success(request, _('Memorial created successfully!'))
     return render(request, 'memorials/create.html', context)
+
+
+
+def edit_memorial(request, memorial_id):
+    """Edit an existing memorial"""
+    memorial = get_object_or_404(Memorial, id=memorial_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        form = MemorialForm(request.POST, request.FILES, instance=memorial, user=request.user)
+        if form.is_valid():
+            memorial = form.save(commit=False)
+            memorial.created_by = request.user
+            memorial.save()
+            
+            # Handle family relationship updates if needed
+            related_memorial = form.cleaned_data.get('related_memorial')
+            relationship_type = form.cleaned_data.get('relationship_type')
+            
+            if related_memorial and relationship_type and getattr(settings, 'ENABLE_FAMILY_RELATIONSHIPS', False):
+                # Check if relationship already exists
+                existing = FamilyRelationship.objects.filter(
+                    person_a=memorial,
+                    person_b=related_memorial,
+                    relationship_type=relationship_type
+                ).first()
+                
+                if not existing:
+                    FamilyRelationship.objects.create(
+                        person_a=memorial,
+                        person_b=related_memorial,
+                        relationship_type=relationship_type,
+                        created_by=request.user,
+                        status='approved'
+                    )
+            
+            messages.success(request, _('Memorial updated successfully!'))
+            return redirect('my_memorials')
+    else:
+        form = MemorialForm(instance=memorial, user=request.user)
+    
+    context = {
+        'form': form,
+        'memorial': memorial,
+        'is_edit': True,
+    }
+    return render(request, 'memorials/edit_memorial.html', context)
+
+
+
+def privacy_policy(request):
+    return render(request, 'memorials/privacy_policy.html')
+
 
 def signup(request):
     if request.method == 'POST':
@@ -345,7 +400,21 @@ def get_memorial_relationships(memorial):
         })
     
     return relationships
-# Add these views to your memorials/views.py file
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Keep user logged in after password change
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('my_memorials')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'registration/change_password.html', {'form': form})
 
 # Memorial sharing view (public access via share token)
 def memorial_share(request, share_token):
@@ -433,6 +502,138 @@ def get_social_sharing_links(request, memorial_id):
             'copy': f'http://127.0.0.1:8000/memorial/{memorial_id}/'
         }
     })
+
+
+@login_required
+def suggest_relationship(request, memorial_id):
+    """Suggest a family relationship to someone else's memorial"""
+    target_memorial = get_object_or_404(Memorial, id=memorial_id, approved=True)
+    
+    # Check if user has any approved memorials to connect
+    user_memorials = Memorial.objects.filter(created_by=request.user, approved=True)
+    
+    if not user_memorials.exists():
+        messages.error(request, "You need to create at least one approved memorial before suggesting relationships.")
+        return redirect('create_memorial')
+    
+    if request.method == 'POST':
+        form = SuggestRelationshipForm(request.POST, user=request.user, target_memorial=target_memorial)
+        if form.is_valid():
+            my_memorial = form.cleaned_data['my_memorial']
+            relationship_type = form.cleaned_data['relationship_type']
+            suggestion_note = form.cleaned_data.get('suggestion_note', '')
+            
+            # Check if relationship already exists
+            existing = FamilyRelationship.objects.filter(
+                person_a=my_memorial,
+                person_b=target_memorial,
+                relationship_type=relationship_type
+            ).first()
+            
+            if existing:
+                messages.warning(request, "This relationship has already been suggested.")
+                return redirect('browse')
+            
+            # Check if user owns both memorials (auto-approve)
+            if my_memorial.created_by == target_memorial.created_by:
+                verification_status = 'auto_approved'
+                status = 'approved'
+                messages.success(request, "Relationship added successfully (both memorials are yours)!")
+            else:
+                verification_status = 'user_suggested'
+                status = 'pending'
+                messages.success(request, "Relationship suggestion sent! The memorial owner will be notified.")
+            
+            # Create the relationship
+            FamilyRelationship.objects.create(
+                person_a=my_memorial,
+                person_b=target_memorial,
+                relationship_type=relationship_type,
+                created_by=request.user,
+                suggested_by=request.user,
+                status=status,
+                verification_status=verification_status,
+                suggestion_note=suggestion_note
+            )
+            
+            return redirect('memorial_detail', pk=target_memorial.id)
+    else:
+        form = SuggestRelationshipForm(user=request.user, target_memorial=target_memorial)
+    
+    context = {
+        'form': form,
+        'target_memorial': target_memorial,
+        'user_memorials': user_memorials,
+    }
+    
+    return render(request, 'memorials/suggest_relationship.html', context)
+
+
+@login_required
+def manage_relationship_suggestions(request):
+    """View pending relationship suggestions for user's memorials"""
+    # Get all pending suggestions for memorials owned by this user
+    pending_suggestions = FamilyRelationship.objects.filter(
+        status='pending'
+    ).filter(
+        Q(person_a__created_by=request.user) | Q(person_b__created_by=request.user)
+    ).select_related('person_a', 'person_b', 'suggested_by')
+    
+    context = {
+        'pending_suggestions': pending_suggestions,
+    }
+    
+    return render(request, 'memorials/manage_suggestions.html', context)
+
+
+@login_required
+def approve_relationship_suggestion(request, relationship_id):
+    """Approve a relationship suggestion"""
+    relationship = get_object_or_404(FamilyRelationship, id=relationship_id)
+    
+    if not relationship.can_approve(request.user):
+        messages.error(request, "You don't have permission to approve this relationship.")
+        return redirect('manage_relationship_suggestions')
+    
+    if request.method == 'POST':
+        relationship.approve(request.user)
+        messages.success(request, f"Relationship approved: {relationship.person_a.full_name} - {relationship.get_relationship_type_display()} - {relationship.person_b.full_name}")
+    
+    return redirect('manage_relationship_suggestions')
+
+
+@login_required
+def reject_relationship_suggestion(request, relationship_id):
+    """Reject a relationship suggestion"""
+    relationship = get_object_or_404(FamilyRelationship, id=relationship_id)
+    
+    if not relationship.can_approve(request.user):
+        messages.error(request, "You don't have permission to reject this relationship.")
+        return redirect('manage_relationship_suggestions')
+    
+    if request.method == 'POST':
+        relationship.reject(request.user)
+        messages.info(request, "Relationship suggestion rejected.")
+    
+    return redirect('manage_relationship_suggestions')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Create sharing invitation (Premium feature)
 # @login_required
 # def create_sharing_invitation(request):

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Edit Memorial - Memorial Heritage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="edit-memorial-card">
+                <div class="edit-header">
+                    <h2><i class="fas fa-edit me-2"></i>Edit Memorial</h2>
+                    <p class="text-muted">Update the memorial for {{ memorial.full_name }}</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="edit-form">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                            Full Name *
+                        </label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.full_name.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.dob.id_for_label }}" class="form-label">
+                                    Date of Birth *
+                                </label>
+                                {{ form.dob }}
+                                {% if form.dob.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.dob.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.dod.id_for_label }}" class="form-label">
+                                    Date of Death *
+                                </label>
+                                {{ form.dod }}
+                                {% if form.dod.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.dod.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.country.id_for_label }}" class="form-label">
+                            Country *
+                        </label>
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.country.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.story.id_for_label }}" class="form-label">
+                            Story/Tribute *
+                        </label>
+                        {{ form.story }}
+                        {% if form.story.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.story.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.image_url.id_for_label }}" class="form-label">
+                            Photo
+                        </label>
+                        {% if memorial.image_url %}
+                            <div class="current-image mb-3">
+                                <p class="text-muted mb-2">Current photo:</p>
+                                <img src="{{ memorial.image_url.url }}" alt="{{ memorial.full_name }}" class="img-thumbnail" style="max-width: 200px;">
+                                <p class="text-muted mt-2"><small>Upload a new photo to replace the current one</small></p>
+                            </div>
+                        {% endif %}
+                        {{ form.image_url }}
+                        {% if form.image_url.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.image_url.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Only JPEG, PNG, and WebP images allowed (max 5MB)</small>
+                    </div>
+
+                    {% if enable_family_relationships %}
+                    <div class="family-section">
+                        <h5 class="mb-3"><i class="fas fa-users me-2"></i>Family Relationships (Optional)</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.related_memorial.id_for_label }}" class="form-label">
+                                        Related Memorial
+                                    </label>
+                                    {{ form.related_memorial }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.relationship_type.id_for_label }}" class="form-label">
+                                        Relationship Type
+                                    </label>
+                                    {{ form.relationship_type }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="{% url 'my_memorials' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.edit-memorial-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    padding: 2.5rem;
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+}
+
+.edit-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.edit-header h2 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.edit-header p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.edit-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.edit-form .form-label {
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.edit-form input[type="text"],
+.edit-form input[type="date"],
+.edit-form input[type="file"],
+.edit-form select,
+.edit-form textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.edit-form input:focus,
+.edit-form select:focus,
+.edit-form textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-form textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.family-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.family-section h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.form-actions .btn {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.form-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.current-image {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.alert {
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .edit-memorial-card {
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
