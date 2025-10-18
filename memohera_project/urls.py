@@ -24,7 +24,9 @@ from memorials.views import (
     home, create_memorial, browse_memorials, about, signup, my_memorials, 
     add_family_relationship, approve_family_relationship, logout_view,
     memorial_share, get_social_sharing_links,privacy_policy,change_password,edit_memorial,
-    suggest_relationship,manage_relationship_suggestions,approve_relationship_suggestion,reject_relationship_suggestion
+    suggest_relationship,manage_relationship_suggestions,approve_relationship_suggestion,
+    reject_relationship_suggestion,family_tree_view,notifications_list,mark_notification_read,
+    mark_all_notifications_read
 )
 
 urlpatterns = [
@@ -43,8 +45,6 @@ urlpatterns += i18n_patterns(
     path('browse/', browse_memorials, name='browse'),
     path('about/', about, name='about'),
     path('my-memorials/', my_memorials, name='my_memorials'),
-    # path('memorial/<int:memorial_id>/add-family/', add_family_relationship, name='add_family_relationship'),
-    # path('approve-relationship/<int:relationship_id>/', approve_family_relationship, name='approve_family_relationship'),     
 
     # Auth
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
@@ -59,16 +59,14 @@ urlpatterns += i18n_patterns(
     path('relationship-suggestions/', manage_relationship_suggestions, name='manage_relationship_suggestions'),
     path('relationship/<int:relationship_id>/approve/', approve_relationship_suggestion, name='approve_relationship_suggestion'),
     path('relationship/<int:relationship_id>/reject/', reject_relationship_suggestion, name='reject_relationship_suggestion'),
+    path('memorial/<int:memorial_id>/family-tree/', family_tree_view, name='family_tree'),
 
+    # Notification URLs
+    path('notifications/', notifications_list, name='notifications_list'),
+    path('notification/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
 
     # # Sharing URLs
-    # path('share/<uuid:share_token>/', memorial_share, name='memorial_share'),
-    # path('api/memorial/<int:memorial_id>/share-links/', get_social_sharing_links, name='get_social_sharing_links'),
-    
-    # # Premium sharing features
-    # path('create-invitation/', create_sharing_invitation, name='create_sharing_invitation'),
-    # path('invitation/<uuid:invitation_id>/', memorial_create_via_invitation, name='memorial_create_via_invitation'),
-    # path('manage-invitations/', manage_invitations, name='manage_invitations'),    
     path('api/memorial/<int:memorial_id>/share-links/', get_social_sharing_links, name='get_social_sharing_links'),
 
     path('change-password/', change_password, name='change_password'),

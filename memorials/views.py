@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
 from .forms import MemorialForm, SuggestRelationshipForm
-from .models import Memorial, FamilyRelationship
 from django.db.models import Q
 
 from django.core.paginator import Paginator
@@ -25,9 +24,164 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import get_object_or_404
 
+from .models import Memorial, FamilyRelationship, Notification
+
+def create_notification(user, notification_type, title, message, action_url='', **kwargs):
+    """Helper function to create notifications"""
+    Notification.objects.create(
+        user=user,
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        action_url=action_url,
+        related_memorial=kwargs.get('related_memorial'),
+        related_relationship=kwargs.get('related_relationship'),
+        related_user=kwargs.get('related_user'),
+    )
+
+def notify_relationship_suggested(relationship):
+    """Notify memorial owners when a relationship is suggested"""
+    # Notify owner of person_a
+    if relationship.person_a.created_by != relationship.suggested_by:
+        create_notification(
+            user=relationship.person_a.created_by,
+            notification_type='relationship_suggested',
+            title='New Family Connection Suggestion',
+            message=f'{relationship.suggested_by.username} suggested that {relationship.person_a.full_name} is {relationship.get_relationship_type_display()} of {relationship.person_b.full_name}',
+            action_url='/relationship-suggestions/',
+            related_relationship=relationship,
+            related_user=relationship.suggested_by
+        )
+    
+    # Notify owner of person_b
+    if relationship.person_b.created_by != relationship.suggested_by:
+        create_notification(
+            user=relationship.person_b.created_by,
+            notification_type='relationship_suggested',
+            title='New Family Connection Suggestion',
+            message=f'{relationship.suggested_by.username} suggested a family connection with {relationship.person_b.full_name}',
+            action_url='/relationship-suggestions/',
+            related_relationship=relationship,
+            related_user=relationship.suggested_by
+        )
+
+def notify_relationship_approved(relationship, approved_by):
+    """Notify suggester when their relationship is approved"""
+    if relationship.suggested_by and relationship.suggested_by != approved_by:
+        create_notification(
+            user=relationship.suggested_by,
+            notification_type='relationship_approved',
+            title='Family Connection Approved!',
+            message=f'Your suggested connection between {relationship.person_a.full_name} and {relationship.person_b.full_name} has been approved!',
+            action_url=f'/memorial/{relationship.person_a.id}/family-tree/',
+            related_relationship=relationship,
+            related_user=approved_by
+        )
+
+def notify_relationship_rejected(relationship, rejected_by):
+    """Notify suggester when their relationship is rejected"""
+    if relationship.suggested_by and relationship.suggested_by != rejected_by:
+        create_notification(
+            user=relationship.suggested_by,
+            notification_type='relationship_rejected',
+            title='Family Connection Not Approved',
+            message=f'The suggested connection between {relationship.person_a.full_name} and {relationship.person_b.full_name} was not approved.',
+            action_url='/browse/',
+            related_relationship=relationship,
+            related_user=rejected_by
+        )
 
 
 
+
+
+
+
+
+
+
+
+@login_required
+def family_tree_view(request, memorial_id):
+    """Display interactive family tree for a memorial"""
+    memorial = get_object_or_404(Memorial, id=memorial_id, approved=True)
+    
+    # Build tree data structure
+    tree_data = build_tree_data(memorial)
+    
+    context = {
+        'memorial': memorial,
+        'tree_data': tree_data,
+    }
+    
+    return render(request, 'memorials/family_tree.html', context)
+
+def build_tree_data(root_memorial):
+    """Build hierarchical tree data for D3.js - shows all relationships"""
+    visited = set()
+    
+    def get_node_data(memorial, depth=0, max_depth=3):
+        """Get data for a single memorial node"""
+        if memorial.id in visited or depth > max_depth:
+            return None
+        
+        visited.add(memorial.id)
+        
+        node = {
+            'id': memorial.id,
+            'name': memorial.full_name,
+            'birth_year': memorial.dob.year if memorial.dob else '',
+            'death_year': memorial.dod.year if memorial.dod else '',
+            'image': memorial.image_url.url if memorial.image_url else '',
+            'country': memorial.country.name,
+            'children': []
+        }
+        
+        # Get ALL approved relationships (not just parent-child)
+        # Relationships where this memorial is person_a
+        relationships_from = FamilyRelationship.objects.filter(
+            person_a=memorial,
+            status='approved'
+        ).select_related('person_b')
+        
+        for rel in relationships_from:
+            child_node = get_node_data(rel.person_b, depth + 1, max_depth)
+            if child_node:
+                # Add relationship type to the node
+                child_node['relationship'] = rel.get_relationship_type_display()
+                node['children'].append(child_node)
+        
+        # Relationships where this memorial is person_b (reverse)
+        relationships_to = FamilyRelationship.objects.filter(
+            person_b=memorial,
+            status='approved'
+        ).select_related('person_a')
+        
+        for rel in relationships_to:
+            child_node = get_node_data(rel.person_a, depth + 1, max_depth)
+            if child_node:
+                # Add reverse relationship type
+                reverse_map = {
+                    'parent': 'Child',
+                    'child': 'Parent',
+                    'spouse': 'Spouse',
+                    'sibling': 'Sibling',
+                    'grandparent': 'Grandchild',
+                    'grandchild': 'Grandparent',
+                    'aunt_uncle': 'Niece/Nephew',
+                    'niece_nephew': 'Aunt/Uncle',
+                    'cousin': 'Cousin',
+                }
+                child_node['relationship'] = reverse_map.get(rel.relationship_type, rel.get_relationship_type_display())
+                node['children'].append(child_node)
+        
+        return node
+    
+    tree = get_node_data(root_memorial)
+    
+    # Convert to JSON
+    import json
+    return json.dumps(tree) if tree else json.dumps({'id': root_memorial.id, 'name': root_memorial.full_name, 'children': []})
 
 @login_required
 def create_memorial(request):
@@ -587,7 +741,7 @@ def suggest_relationship(request, memorial_id):
                 messages.success(request, "Relationship suggestion sent! The memorial owner will be notified.")
             
             # Create the relationship
-            FamilyRelationship.objects.create(
+            relationship = FamilyRelationship.objects.create(
                 person_a=my_memorial,
                 person_b=target_memorial,
                 relationship_type=relationship_type,
@@ -597,6 +751,10 @@ def suggest_relationship(request, memorial_id):
                 verification_status=verification_status,
                 suggestion_note=suggestion_note
             )
+
+            # Send notification if not auto-approved
+            if status == 'pending':
+                notify_relationship_suggested(relationship)
             
             return redirect('memorial_detail', pk=target_memorial.id)
     else:
@@ -639,6 +797,10 @@ def approve_relationship_suggestion(request, relationship_id):
     
     if request.method == 'POST':
         relationship.approve(request.user)
+        
+        # Send notification
+        notify_relationship_approved(relationship, request.user)
+        
         messages.success(request, f"Relationship approved: {relationship.person_a.full_name} - {relationship.get_relationship_type_display()} - {relationship.person_b.full_name}")
     
     return redirect('manage_relationship_suggestions')
@@ -654,11 +816,53 @@ def reject_relationship_suggestion(request, relationship_id):
         return redirect('manage_relationship_suggestions')
     
     if request.method == 'POST':
+        # Send notification before deleting
+        notify_relationship_rejected(relationship, request.user)
+        
         relationship.reject(request.user)
         messages.info(request, "Relationship suggestion rejected.")
     
     return redirect('manage_relationship_suggestions')
 
+@login_required
+def notifications_list(request):
+    """Display all notifications for the user"""
+    notifications = Notification.objects.filter(user=request.user)
+    
+    # Separate unread and read
+    unread_notifications = notifications.filter(is_read=False)
+    read_notifications = notifications.filter(is_read=True)[:20]  # Last 20 read
+    
+    context = {
+        'unread_notifications': unread_notifications,
+        'read_notifications': read_notifications,
+    }
+    
+    return render(request, 'memorials/notifications.html', context)
+
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read"""
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.mark_as_read()
+    
+    # Redirect to action URL if exists
+    if notification.action_url:
+        return redirect(notification.action_url)
+    
+    return redirect('notifications_list')
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    Notification.objects.filter(user=request.user, is_read=False).update(
+        is_read=True,
+        read_at=timezone.now()
+    )
+    messages.success(request, 'All notifications marked as read.')
+    return redirect('notifications_list')
 
 
 

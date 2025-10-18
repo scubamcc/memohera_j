@@ -2,9 +2,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.utils import timezone
+from django.conf import settings
 from cloudinary.models import CloudinaryField
 from django_countries.fields import CountryField
 import uuid
+
+
+
 
 class Memorial(models.Model):
     full_name = models.CharField(max_length=200, blank=False)
@@ -89,22 +94,7 @@ VERIFICATION_STATUS_CHOICES = [
     ('creator_verified', 'Creator Verified'),
     ('auto_approved', 'Auto Approved'),
 ]
-#####################################################################################
-# class FamilyRelationship(models.Model):
-#     person_a = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='family_relationships_from')
-#     person_b = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='family_relationships_to')
-#     relationship_type = models.CharField(max_length=20, choices=RELATIONSHIP_CHOICES)
-#     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-#     status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('approved', 'Approved')], default='pending')
-#     created_at = models.DateTimeField(auto_now_add=True)
 
-#     class Meta:
-#         unique_together = ['person_a', 'person_b', 'relationship_type']
-        
-#     def __str__(self):
-#         return f"{self.person_a.full_name} - {self.get_relationship_type_display()} - {self.person_b.full_name}"
-
-#####################################################################################
 class FamilyRelationship(models.Model):
     person_a = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='family_relationships_from')
     person_b = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='family_relationships_to')
@@ -173,90 +163,92 @@ class FamilyRelationship(models.Model):
             self.save()
             return True
         return False
-#####################################################################################
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_premium = models.BooleanField(default=False)
+    
+    # Anniversary notification settings
+    enable_anniversary_notifications = models.BooleanField(default=True)
+    notify_death_anniversaries = models.BooleanField(default=True)
+    notify_birthdays = models.BooleanField(default=True)
+    notify_milestones = models.BooleanField(default=True)
+    
+    # Timing preferences
+    notify_week_before = models.BooleanField(default=True)
+    notify_day_before = models.BooleanField(default=True)
+    notify_on_day = models.BooleanField(default=True)
 
 
-# # Add these fields to your Memorial model
-# class Memorial(models.Model):
-#     # ... your existing fields ...
+class MemorialReminderSettings(models.Model):
+    memorial = models.OneToOneField('Memorial', on_delete=models.CASCADE)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     
-#     # New sharing fields
-#     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-#     is_shareable = models.BooleanField(default=True, help_text="Allow this memorial to be shared publicly")
-#     share_count = models.PositiveIntegerField(default=0, help_text="Number of times this memorial has been shared")
+    # Override global settings
+    custom_settings_enabled = models.BooleanField(default=False)
+    notify_death_anniversary = models.BooleanField(default=True)
+    notify_birthday = models.BooleanField(default=True)
     
-#     # ... rest of your existing fields ...
+    # Who to notify
+    notify_creator_only = models.BooleanField(default=True)
+    notify_all_family = models.BooleanField(default=False)
+    specific_users = models.ManyToManyField(User, blank=True, related_name='memorial_reminders')
     
-#     def get_share_url(self):
-#         """Get the shareable URL for this memorial"""
-#         return reverse('memorial_share', kwargs={'share_token': self.share_token})
-    
-#     def get_absolute_url(self):
-#         """Get the regular URL for this memorial (if you don't have this already)"""
-#         return reverse('memorial_detail', kwargs={'pk': self.pk})
-    
-#     def increment_share_count(self):
-#         """Increment the share counter"""
-#         self.share_count += 1
-#         self.save(update_fields=['share_count'])
+    # Custom dates
+    custom_reminder_date = models.DateField(null=True, blank=True)
+    custom_reminder_label = models.CharField(max_length=100, blank=True)
 
-#     def __str__(self):
-#         return self.full_name    
+class ScheduledNotification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    memorial = models.ForeignKey('Memorial', on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=50)  # 'death_anniversary', 'birthday', etc.
+    scheduled_date = models.DateField()
+    year_count = models.IntegerField()  # e.g., "5th anniversary"
+    is_sent = models.BooleanField(default=False)
+    sent_at = models.DateTimeField(null=True, blank=True)
 
-# New model for premium sharing invitations
-# class SharingInvitation(models.Model):
-#     INVITATION_TYPES = [
-#         ('create', 'Create Memorial'),
-#         ('collaborate', 'Collaborate on Memorial'),
-#     ]
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('relationship_suggested', 'Relationship Suggested'),
+        ('relationship_approved', 'Relationship Approved'),
+        ('relationship_rejected', 'Relationship Rejected'),
+        ('new_family_member', 'New Family Member'),
+        ('death_anniversary', 'Death Anniversary'),  # ADD
+        ('birthday_anniversary', 'Birthday Anniversary'),  # ADD        
+    ]
     
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='sent_invitations')
-#     invitation_type = models.CharField(max_length=20, choices=INVITATION_TYPES, default='create')
-#     email = models.EmailField(blank=True, help_text="Email of person being invited")
-#     message = models.TextField(blank=True, help_text="Personal message from inviter")
-#     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, null=True, blank=True, 
-#                                 help_text="Memorial to collaborate on (if applicable)")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
     
-#     # Usage tracking
-#     is_used = models.BooleanField(default=False)
-#     used_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True,
-#                                related_name='used_invitations')
-#     used_at = models.DateTimeField(null=True, blank=True)
+    # Optional: Link to related objects
+    related_memorial = models.ForeignKey('Memorial', on_delete=models.CASCADE, null=True, blank=True)
+    related_relationship = models.ForeignKey('FamilyRelationship', on_delete=models.CASCADE, null=True, blank=True)
+    related_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications_from')
     
-#     # Expiry
-#     expires_at = models.DateTimeField()
-#     is_active = models.BooleanField(default=True)
+    # URL to navigate to when clicked
+    action_url = models.CharField(max_length=500, blank=True)
     
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
+    # Status
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
     
-#     class Meta:
-#         ordering = ['-created_at']
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['-created_at']),
+        ]
     
-#     def __str__(self):
-#         return f"Invitation {self.id} - {self.invitation_type} - {self.email or 'No email'}"
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
     
-#     def get_invitation_url(self):
-#         """Get the invitation URL"""
-#         if self.invitation_type == 'create':
-#             return reverse('memorial_create_via_invitation', kwargs={'invitation_id': self.id})
-#         else:
-#             return reverse('memorial_collaborate', kwargs={'invitation_id': self.id})
-    
-#     def is_valid(self):
-#         """Check if invitation is still valid"""
-#         from django.utils import timezone
-#         return (
-#             self.is_active and 
-#             not self.is_used and 
-#             self.expires_at > timezone.now()
-#         )
-    
-#     def mark_as_used(self, user):
-#         """Mark invitation as used"""
-#         from django.utils import timezone
-#         self.is_used = True
-#         self.used_by = user
-#         self.used_at = timezone.now()
-#         self.save()
+    def mark_as_read(self):
+        """Mark notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
+
+

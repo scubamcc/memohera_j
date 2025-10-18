@@ -851,16 +851,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Build action buttons HTML
         let actionButtonsHtml = '';
         {% if user.is_authenticated %}
-        actionButtonsHtml = `
-            <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
-                    <i class="fas fa-link me-1"></i>Suggest Connection
-                </a>
-                <button class="btn btn-outline-primary btn-sm" onclick="shareMemorial(${memorial.id})">
-                    <i class="fab fa-facebook-square me-1"></i>Share
-                </button>
-            </div>
-        `;
+            // Check if memorial has relationships
+            const hasRelationships = memorial.relationships && memorial.relationships.length > 0;
+            
+            const familyTreeButton = hasRelationships 
+                ? `<a href="/memorial/${memorial.id}/family-tree/" class="btn btn-outline-success btn-sm" style="text-decoration: none;">
+                    <i class="fas fa-sitemap me-1"></i>Family Tree
+                </a>`
+                : '';
+            
+            actionButtonsHtml = `
+                <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
+                        <i class="fas fa-link me-1"></i>Suggest Connection
+                    </a>
+                    ${familyTreeButton}
+                    <button class="btn btn-outline-primary btn-sm" onclick="shareMemorial(${memorial.id})">
+                        <i class="fab fa-facebook-square me-1"></i>Share
+                    </button>
+                </div>
+            `;
         {% endif %}
         
         // Build modal content
