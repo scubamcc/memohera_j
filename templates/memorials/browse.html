@@ -694,7 +694,6 @@
         </div>
     </div>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const listBtn = document.getElementById('listViewBtn');
@@ -715,15 +714,21 @@ document.addEventListener('DOMContentLoaded', function() {
             "image": {% if m.image_url %}"{{ m.image_url.url|escapejs }}"{% else %}null{% endif %},
             "created_date": "{{ m.created_at|date:'F j, Y'|escapejs }}",
             "relationships": [
-                {% if ENABLE_FAMILY_RELATIONSHIPS|default:False %}
-                    {% with relationships=m.relationships %}
-                        {% for rel in relationships %}
-                            {
-                                "type": "{{ rel.type|escapejs }}",
-                                "name": "{{ rel.memorial.full_name|escapejs }}"
-                            }{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    {% endwith %}
+                {% if m.relationships %}
+                    {% for rel in m.relationships %}
+                        {
+                            "id": {{ rel.memorial.id }},
+                            "type": "{{ rel.type|escapejs }}",
+                            "name": "{{ rel.memorial.full_name|escapejs }}",
+                            "dates": "{{ rel.memorial.dob|date:'Y' }} - {{ rel.memorial.dod|date:'Y' }}",
+                            "verification": {
+                                "icon": "{{ rel.verification_badge.icon }}",
+                                "color": "{{ rel.verification_badge.color }}",
+                                "text": "{{ rel.verification_badge.text }}",
+                                "title": "{{ rel.verification_badge.title }}"
+                            }
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
                 {% endif %}
             ]
         }{% if not forloop.last %},{% endif %}
@@ -786,48 +791,67 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Build family connections HTML
+        // Close any existing modal and clean up backdrops
+        const modalElement = document.getElementById('memorialModal');
+        const existingModal = bootstrap.Modal.getInstance(modalElement);
+        if (existingModal) {
+            existingModal.hide();
+        }
+        
+        // Remove any leftover backdrops
+        setTimeout(function() {
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }, 300);
+        
+        // Build family connections HTML with verification badges
         let familyConnectionsHtml = '';
         if (memorial.relationships && memorial.relationships.length > 0) {
             familyConnectionsHtml = `
-                <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-                    <h6 style="margin-bottom: 1rem; color: #2c3e50;">
-                        Family Connections
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; border: 1px solid #e5e7eb;">
+                    <h6 style="margin-bottom: 1rem; color: #2c3e50; font-weight: 600; display: flex; align-items: center;">
+                        <i class="fas fa-users me-2" style="color: #3498db;"></i>
+                        ${memorial.name}'s Family Connections
                     </h6>
-                    ${memorial.relationships.map(rel => `
-                        <div style="padding: 0.5rem 0;">
-                            <span style="font-weight: 600; color: #3498db; margin-right: 0.5rem;">${rel.type}:</span>
-                            <span>${rel.name}</span>
-                        </div>
-                    `).join('')}
+                    <div style="display: grid; gap: 0.75rem;">
+                        ${memorial.relationships.map(rel => `
+                            <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid #3498db;">
+                                <div style="margin-bottom: 0.5rem;">
+                                    <span style="color: #6c757d; font-size: 0.9rem;">${memorial.name} is </span>
+                                    <span style="font-weight: 600; color: #3498db; font-size: 1rem;">${rel.type}</span>
+                                    <span style="color: #6c757d; font-size: 0.9rem;"> of</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 1.05rem; color: #2c3e50; font-weight: 600;">
+                                            <a href="#" onclick="event.stopPropagation(); openMemorialModal(${rel.id}); return false;" 
+                                               style="color: #3498db; text-decoration: none; cursor: pointer; transition: all 0.2s;"
+                                               onmouseover="this.style.textDecoration='underline'; this.style.color='#2980b9';" 
+                                               onmouseout="this.style.textDecoration='none'; this.style.color='#3498db';">
+                                                ${rel.name}
+                                            </a>
+                                        </div>
+                                        ${rel.dates ? `<div style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">${rel.dates}</div>` : ''}
+                                    </div>
+                                    ${rel.verification ? `
+                                        <span class="badge bg-${rel.verification.color}" style="font-size: 0.7rem; padding: 0.35rem 0.6rem; white-space: nowrap;" title="${rel.verification.title}">
+                                            <i class="fas ${rel.verification.icon} me-1"></i>${rel.verification.text}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `;
         }
         
-modalContent.innerHTML = `
-    <div class="row">
-        <div class="col-md-4 text-center mb-4">
-            ${memorial.image ? 
-                `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
-                `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
-                    <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
-                    <span>No Photo</span>
-                </div>`
-            }
-        </div>
-        <div class="col-md-8">
-            <h2 style="font-size: 2rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem;">${memorial.name}</h2>
-            <div style="color: #3498db; font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem;">${memorial.country}</div>
-            <div style="color: #6c757d; font-size: 1rem; margin-bottom: 1.5rem;">${memorial.dob} – ${memorial.dod}</div>
-            
-            <div style="font-size: 1rem; line-height: 1.7; color: #2c3e50; margin-bottom: 1.5rem;">
-                ${memorial.story.replace(/\n/g, '<br>')}
-            </div>
-            
-            ${familyConnectionsHtml}
-            
-            <!-- NEW: Action Buttons Section -->
-            {% if user.is_authenticated %}
+        // Build action buttons HTML
+        let actionButtonsHtml = '';
+        {% if user.is_authenticated %}
+        actionButtonsHtml = `
             <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
                     <i class="fas fa-link me-1"></i>Suggest Connection
@@ -836,17 +860,42 @@ modalContent.innerHTML = `
                     <i class="fab fa-facebook-square me-1"></i>Share
                 </button>
             </div>
-            {% endif %}
-            
-            <div style="font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 1rem; margin-top: 1rem;">
-                Memorial created on ${memorial.created_date}
+        `;
+        {% endif %}
+        
+        // Build modal content
+        modalContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-4 text-center mb-4">
+                    ${memorial.image ? 
+                        `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
+                        `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
+                            <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                            <span>No Photo</span>
+                        </div>`
+                    }
+                </div>
+                <div class="col-md-8">
+                    <h2 style="font-size: 2rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem;">${memorial.name}</h2>
+                    <div style="color: #3498db; font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem;">${memorial.country}</div>
+                    <div style="color: #6c757d; font-size: 1rem; margin-bottom: 1.5rem;">${memorial.dob} – ${memorial.dod}</div>
+                    
+                    <div style="font-size: 1rem; line-height: 1.7; color: #2c3e50; margin-bottom: 1.5rem;">
+                        ${memorial.story.replace(/\n/g, '<br>')}
+                    </div>
+                    
+                    ${familyConnectionsHtml}
+                    ${actionButtonsHtml}
+                    
+                    <div style="font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 1rem; margin-top: 1rem;">
+                        Memorial created on ${memorial.created_date}
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-`;
+        `;
         
         // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('memorialModal'));
+        const modal = new bootstrap.Modal(modalElement);
         modal.show();
     };
 });
@@ -865,10 +914,7 @@ function toggleAdvancedSearch() {
 }
 
 function clearSearch() {
-    // Clear all form inputs
     document.getElementById('searchForm').reset();
-    
-    // Submit form to clear results
     const url = new URL(window.location.href);
     url.search = '';
     window.location.href = url.toString();

@@ -394,12 +394,54 @@ def get_memorial_relationships(memorial):
     for rel in memorial.family_relationships_to.filter(status='approved'):
         reverse_type = reverse_map.get(rel.relationship_type, rel.relationship_type)
         relationships.append({
-            'type': reverse_type.replace('_', '/').title(),
-            'memorial': rel.person_a,
-            'relationship_obj': rel
+            'type': rel.get_relationship_type_display(),
+            'memorial': rel.person_b,
+            'relationship_obj': rel,
+            'verification_status': rel.verification_status,
+            'verification_badge': get_verification_badge(rel.verification_status),
+            'suggested_by': rel.suggested_by,
         })
-    
+
+    # Get relationships where this memorial is person_b (reverse the relationship)
+    for rel in memorial.family_relationships_to.filter(status='approved'):
+        reverse_type = reverse_map.get(rel.relationship_type, rel.relationship_type.replace('_', '/').title())
+        relationships.append({
+            'type': reverse_type,
+            'memorial': rel.person_a,
+            'relationship_obj': rel,
+            'verification_status': rel.verification_status,
+            'verification_badge': get_verification_badge(rel.verification_status),
+            'suggested_by': rel.suggested_by,
+        })
+
+
     return relationships
+
+def get_verification_badge(verification_status):
+    """Return badge HTML for verification status"""
+    badges = {
+        'creator_verified': {
+            'icon': 'fa-check-circle',
+            'color': 'success',
+            'text': 'Verified',
+            'title': 'Verified by memorial creator'
+        },
+        'user_suggested': {
+            'icon': 'fa-users',
+            'color': 'info',
+            'text': 'User-suggested',
+            'title': 'Suggested by community member'
+        },
+        'auto_approved': {
+            'icon': 'fa-check-double',
+            'color': 'primary',
+            'text': 'Auto-verified',
+            'title': 'Automatically verified (same creator)'
+        },
+    }
+    
+    return badges.get(verification_status, badges['user_suggested'])
+
 
 def change_password(request):
     if request.method == 'POST':
