@@ -28,7 +28,133 @@ from .models import UserProfile, MemorialReminderSettings
 from difflib import SequenceMatcher
 from django.db import models
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+import stripe
+import json
+import os
+from memorials.models import (
+    Memorial, 
+    FamilyRelationship, 
+    Notification,
+    PremiumPackage,  # ADD THIS
+    UserSubscription,  # ADD THIS
+    PaymentTransaction,  # ADD THIS
+    SmartMatchSuggestion,  # ADD THIS if not already there
+    # ... your other imports
+)
 
+
+
+
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY', 'sk_test_YOUR_SECRET_KEY_HERE')
+
+@login_required
+def pricing_page(request):
+    """Show pricing and package options"""
+    packages = PremiumPackage.objects.filter(is_active=True)
+    
+    # Get user's current subscription
+    user_subscription = UserSubscription.objects.filter(user=request.user).first()
+    
+    context = {
+        'packages': packages,
+        'user_subscription': user_subscription,
+    }
+    
+    return render(request, 'premium/pricing.html', context)
+
+
+@login_required
+def create_checkout_session(request, package_id):
+    """Create Stripe checkout session"""
+    package = get_object_or_404(PremiumPackage, id=package_id)
+    
+    try:
+        # Get or create customer
+        user_sub = UserSubscription.objects.filter(user=request.user).first()
+        
+        if user_sub and user_sub.stripe_customer_id:
+            customer_id = user_sub.stripe_customer_id
+        else:
+            customer = stripe.Customer.create(
+                email=request.user.email,
+                name=request.user.get_full_name() or request.user.username,
+                metadata={'user_id': request.user.id}
+            )
+            customer_id = customer.id
+        
+        # Create checkout session
+        session = stripe.checkout.Session.create(
+            mode='subscription',
+            customer=customer_id,
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': package.name,
+                        'description': package.description,
+                    },
+                    'unit_amount': int(package.price * 100),  # Convert to cents
+                    'recurring': {
+                        'interval': 'month',
+                        'interval_count': 1,
+                    },
+                },
+                'quantity': 1,
+            }],
+            success_url=request.build_absolute_uri('/premium/success/'),
+            cancel_url=request.build_absolute_uri('/pricing/'),
+            metadata={
+                'user_id': request.user.id,
+                'package_id': package.id,
+            }
+        )
+        
+        return redirect(session.url)
+        
+    except Exception as e:
+        messages.error(request, f"Error creating checkout: {str(e)}")
+        return redirect('pricing_page')
+
+
+@login_required
+def payment_success(request):
+    """Handle successful payment"""
+    messages.success(request, "Payment successful! Your premium subscription is now active.")
+    return render(request, 'premium/success.html')
+
+
+@login_required
+def subscription_dashboard(request):
+    """User's subscription dashboard"""
+    subscription = UserSubscription.objects.filter(user=request.user).first()
+    transactions = PaymentTransaction.objects.filter(user=request.user).order_by('-created_at')[:10]
+    
+    context = {
+        'subscription': subscription,
+        'transactions': transactions,
+    }
+    
+    return render(request, 'premium/dashboard.html', context)
+
+
+@login_required
+def cancel_subscription(request):
+    """Cancel user's subscription"""
+    if request.method == 'POST':
+        subscription = UserSubscription.objects.filter(user=request.user).first()
+        
+        if subscription and subscription.stripe_subscription_id:
+            try:
+                stripe.Subscription.delete(subscription.stripe_subscription_id)
+                subscription.status = 'cancelled'
+                subscription.save()
+                messages.success(request, "Subscription cancelled successfully.")
+            except Exception as e:
+                messages.error(request, f"Error cancelling subscription: {str(e)}")
+    
+    return redirect('subscription_dashboard')
 
 
 @login_required
@@ -1151,92 +1277,3 @@ def mark_all_notifications_read(request):
     messages.success(request, 'All notifications marked as read.')
     return redirect('notifications_list')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Create sharing invitation (Premium feature)
-# @login_required
-# def create_sharing_invitation(request):
-#     """Create a sharing invitation for premium users"""
-#     # For now, assume all users have premium access - you can add premium checks later
-#     # if not request.user.profile.is_premium:
-#     #     messages.error(request, "This feature is only available for premium members.")
-#     #     return redirect('browse')
-    
-#     if request.method == 'POST':
-#         invitation_type = request.POST.get('invitation_type', 'create')
-#         email = request.POST.get('email', '')
-#         message = request.POST.get('message', '')
-#         memorial_id = request.POST.get('memorial_id')
-        
-#         # Set expiry (7 days from now)
-#         expires_at = timezone.now() + timedelta(days=7)
-        
-#         # Create a simple invitation (you'll need to create this model later)
-#         invitation_id = uuid.uuid4()
-        
-#         # For now, just return success with a mock invitation URL
-#         invitation_url = request.build_absolute_uri(f'/invitation/{invitation_id}/')
-        
-#         messages.success(request, f"Invitation created! Share this link: {invitation_url}")
-        
-#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#             return JsonResponse({
-#                 'success': True,
-#                 'invitation_url': invitation_url,
-#                 'invitation_id': str(invitation_id)
-#             })
-#         else:
-#             return redirect('create_sharing_invitation')
-    
-#     # GET request - show form
-#     memorials = Memorial.objects.filter(created_by=request.user)
-    
-#     context = {
-#         'memorials': memorials,
-#     }
-    
-#     return render(request, 'memorials/create_invitation.html', context)
-
-# Use sharing invitation to create memorial
-# def memorial_create_via_invitation(request, invitation_id):
-#     """Create a memorial using a sharing invitation"""
-#     # For now, just redirect to create memorial with a success message
-#     # You can implement full invitation logic later
-    
-#     # If user is not authenticated, redirect to signup with invitation
-#     if not request.user.is_authenticated:
-#         messages.info(request, "Please create an account to use this invitation.")
-#         return redirect(f"{reverse('signup')}?invitation={invitation_id}")
-    
-#     # Add success message
-#     messages.success(request, "Welcome! You've been invited to create a memorial.")
-    
-#     # Redirect to create memorial page
-#     return redirect('create_memorial')
-# View to manage sharing invitations
-# @login_required
-# def manage_invitations(request):
-#     """Manage user's sharing invitations"""
-#     # For now, just show a placeholder page
-#     # You can implement full invitation management later
-    
-#     context = {
-#         'sent_invitations': [],  # Will be populated when you implement the invitation model
-#         'used_invitations': [],
-#     }
-    
-#     return render(request, 'memorials/manage_invitations.html', context)

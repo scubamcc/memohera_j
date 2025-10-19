@@ -15,6 +15,7 @@ import os
 import dj_database_url
 from django.utils.translation import gettext_lazy as _
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,6 +32,12 @@ except ImportError:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dn-)tyh$!ubjl&ph0y0#k4q^yshi&3^!i1-w)#hsmm2#&-^3z&')
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+# Test mode (set to False in production)
+STRIPE_TEST_MODE = True
 
 # Application definition
 INSTALLED_APPS = [

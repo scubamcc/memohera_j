@@ -1,0 +1,209 @@
+<!-- templates/premium/success.html -->
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payment Successful - Memorial Heritage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 3rem;
+        animation: scaleIn 0.5s ease-out;
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+
+    .success-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .success-message {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .success-details {
+        background: #e8f5e9;
+        border: 2px solid #27ae60;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(39, 174, 96, 0.2);
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .detail-value {
+        color: #27ae60;
+        font-weight: 700;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+        background: #f8f9fa;
+    }
+
+    .features-unlock {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .features-unlock h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .feature-list li {
+        padding: 0.5rem 0;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .feature-list li::before {
+        content: '✓';
+        color: #27ae60;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">✓</div>
+    
+    <h1 class="success-title">Payment Successful!</h1>
+    
+    <p class="success-message">
+        Thank you for upgrading to Premium. Your subscription is now active and you have access to all premium features.
+    </p>
+
+    <div class="success-details">
+        <div class="detail-item">
+            <span class="detail-label">Plan:</span>
+            <span class="detail-value">Premium</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">Active</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Renewal Date:</span>
+            <span class="detail-value">{{ subscription.expires_at|date:"M d, Y" }}</span>
+        </div>
+    </div>
+
+    <div class="features-unlock">
+        <h3>You now have access to:</h3>
+        <ul class="feature-list">
+            <li>Smart AI Matching for family connections</li>
+            <li>Anniversary Notifications</li>
+            <li>Advanced Family Tree Features</li>
+            <li>100 GB Storage</li>
+            <li>Priority Support</li>
+            <li>Ad-free experience</li>
+        </ul>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{% url 'smart_match_suggestions' %}" class="btn-primary">
+            View Smart Matches
+        </a>
+        <a href="{% url 'subscription_dashboard' %}" class="btn-secondary">
+            Manage Subscription
+        </a>
+    </div>
+
+    <p style="color: #6c757d; margin-top: 2rem; font-size: 0.9rem;">
+        A confirmation email has been sent to {{ user.email }}
+    </p>
+</div>
+{% endblock %}
+
+

@@ -7,9 +7,110 @@ from django.conf import settings
 from cloudinary.models import CloudinaryField
 from django_countries.fields import CountryField
 import uuid
+from datetime import timedelta
 
 
+class PremiumPackage(models.Model):
+    """Premium subscription tiers"""
+    TIER_CHOICES = [
+        ('free', 'Free'),
+        ('pro', 'Pro'),
+        ('premium', 'Premium'),
+    ]
+    
+    name = models.CharField(max_length=50)
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, unique=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stripe_price_id = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Features
+    smart_matches_enabled = models.BooleanField(default=False)
+    anniversary_notifications = models.BooleanField(default=False)
+    family_tree_advanced = models.BooleanField(default=False)
+    storage_gb = models.IntegerField(default=1)
+    
+    description = models.TextField(blank=True)
+    display_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['display_order']
+    
+    def __str__(self):
+        return f"{self.name} (${self.price})"
 
+
+class UserSubscription(models.Model):
+    """Track user's premium subscriptions"""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
+        ('pending', 'Pending'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
+    package = models.ForeignKey(PremiumPackage, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Stripe info
+    stripe_customer_id = models.CharField(max_length=255, blank=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True)
+    stripe_payment_method_id = models.CharField(max_length=255, blank=True)
+    
+    # Dates
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    
+    def is_active_subscription(self):
+        """Check if subscription is currently active"""
+        if self.status != 'active':
+            return False
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True
+    
+    def days_until_expiry(self):
+        """Days remaining on subscription"""
+        if not self.expires_at:
+            return None
+        delta = self.expires_at - timezone.now()
+        return max(0, delta.days)
+    
+    class Meta:
+        verbose_name_plural = "User Subscriptions"
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.package.name if self.package else 'No Package'}"
+
+
+class PaymentTransaction(models.Model):
+    """Track all payment transactions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_transactions')
+    subscription = models.ForeignKey(UserSubscription, on_delete=models.SET_NULL, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Stripe info
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)
+    stripe_charge_id = models.CharField(max_length=255, blank=True)
+    
+    # Dates
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"${self.amount} - {self.user.username} - {self.status}"
 
 class Memorial(models.Model):
     full_name = models.CharField(max_length=200, blank=False)

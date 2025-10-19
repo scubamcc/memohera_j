@@ -1,0 +1,410 @@
+<!-- templates/premium/pricing.html -->
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pricing - Memorial Heritage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pricing-header {
+        text-align: center;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-bottom: 3rem;
+        border-radius: 12px;
+    }
+
+    .pricing-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .pricing-header p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    .pricing-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+    }
+
+    .pricing-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border-color: #667eea;
+    }
+
+    .pricing-card.featured {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        transform: scale(1.05);
+    }
+
+    .pricing-card.featured .badge {
+        position: absolute;
+        top: -12px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .package-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .package-price {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .package-price span {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+
+    .package-description {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        min-height: 40px;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 2rem;
+        flex-grow: 1;
+    }
+
+    .features-list li {
+        padding: 0.75rem 0;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .features-list li::before {
+        content: '✓';
+        color: #27ae60;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .features-list li.disabled {
+        opacity: 0.5;
+        color: #bdbdbd;
+    }
+
+    .features-list li.disabled::before {
+        content: '✗';
+        color: #e74c3c;
+    }
+
+    .cta-button {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .cta-button.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .cta-button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .cta-button.secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .cta-button.secondary:hover {
+        background: #f8f9fa;
+    }
+
+    .cta-button.disabled {
+        background: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .current-plan {
+        background: #e8f5e9;
+        color: #27ae60;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .faq-section {
+        margin-top: 4rem;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .faq-section h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #2c3e50;
+    }
+
+    .faq-item {
+        margin-bottom: 1.5rem;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .faq-item h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .faq-item p {
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .billing-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+        align-items: center;
+    }
+
+    .billing-toggle label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .toggle-switch {
+        width: 50px;
+        height: 28px;
+        background: #ccc;
+        border-radius: 20px;
+        position: relative;
+        transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+        background: #667eea;
+    }
+
+    .toggle-switch::after {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: left 0.3s;
+    }
+
+    .toggle-switch.active::after {
+        left: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .pricing-header h1 {
+            font-size: 2rem;
+        }
+
+        .pricing-container {
+            grid-template-columns: 1fr;
+        }
+
+        .pricing-card.featured {
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="pricing-header">
+        <h1>Simple, Transparent Pricing</h1>
+        <p>Choose the plan that works best for you</p>
+    </div>
+
+    <!-- Billing Toggle -->
+    <div class="billing-toggle">
+        <label>
+            <span>Monthly</span>
+            <div class="toggle-switch"></div>
+        </label>
+        <span>Save 20% with Annual</span>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="pricing-container">
+        {% for package in packages %}
+        <div class="pricing-card {% if package.tier == 'premium' %}featured{% endif %}">
+            {% if package.tier == 'premium' %}
+            <div class="badge">Most Popular</div>
+            {% endif %}
+
+            <div class="package-name">{{ package.name }}</div>
+            
+            {% if package.price > 0 %}
+            <div class="package-price">
+                ${{ package.price }}<span>/month</span>
+            </div>
+            {% else %}
+            <div class="package-price">Free</div>
+            {% endif %}
+
+            <p class="package-description">{{ package.description }}</p>
+
+            <!-- Current Plan Indicator -->
+            {% if user_subscription and user_subscription.package == package and user_subscription.is_active_subscription %}
+            <div class="current-plan">
+                ✓ Your Current Plan
+                {% if user_subscription.expires_at %}
+                <br><small>Expires: {{ user_subscription.expires_at|date:"M d, Y" }}</small>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Features List -->
+            <ul class="features-list">
+                <li {% if not package.smart_matches_enabled %}class="disabled"{% endif %}>
+                    Smart AI Matching
+                </li>
+                <li {% if not package.anniversary_notifications %}class="disabled"{% endif %}>
+                    Anniversary Notifications
+                </li>
+                <li {% if not package.family_tree_advanced %}class="disabled"{% endif %}>
+                    Advanced Family Tree
+                </li>
+                <li>
+                    {{ package.storage_gb }} GB Storage
+                </li>
+                <li>
+                    Priority Support
+                </li>
+            </ul>
+
+            <!-- CTA Button -->
+            {% if user_subscription and user_subscription.package == package and user_subscription.is_active_subscription %}
+            <button class="cta-button disabled" disabled>
+                Current Plan
+            </button>
+            {% elif package.tier == 'free' %}
+            <button class="cta-button secondary" disabled>
+                Always Free
+            </button>
+            {% else %}
+            <a href="{% url 'create_checkout' package.id %}" class="cta-button primary">
+                Upgrade Now
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+
+        <div class="faq-item">
+            <h3>Can I cancel anytime?</h3>
+            <p>Yes! You can cancel your subscription at any time from your subscription dashboard. You'll retain access until your billing period ends.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>What payment methods do you accept?</h3>
+            <p>We accept all major credit cards (Visa, MasterCard, American Express) through our secure Stripe payment processor.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Do you offer refunds?</h3>
+            <p>We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact our support team for a full refund.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Can I upgrade or downgrade?</h3>
+            <p>Yes! You can change your plan at any time. We'll prorate any charges or credits based on your current billing cycle.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Is my data secure?</h3>
+            <p>All your memorial data is encrypted and securely stored. We comply with GDPR and other privacy regulations.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>What is Smart AI Matching?</h3>
+            <p>Our AI analyzes memorial profiles to suggest potential family connections based on names, dates, locations, and other details. Pro and Premium plans get access to these smart suggestions.</p>
+        </div>
+    </div>
+
+    <!-- Contact Support -->
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 12px;">
+        <h3>Have questions?</h3>
+        <p style="margin-bottom: 1rem;">Our support team is here to help</p>
+        <a href="mailto:support@memorialheritage.com" style="color: #667eea; text-decoration: none; font-weight: 600;">
+            support@memorialheritage.com
+        </a>
+    </div>
+</div>
+
+<script>
+    // Simple billing toggle (you can enhance this later)
+    document.querySelector('.toggle-switch').addEventListener('click', function(e) {
+        this.classList.toggle('active');
+        // You can add annual pricing logic here
+    });
+</script>
+{% endblock %}

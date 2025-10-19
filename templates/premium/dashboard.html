@@ -1,0 +1,330 @@
+<!-- templates/premium/dashboard.html -->
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Subscription Dashboard - Memorial Heritage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+    }
+
+    .dashboard-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .subscription-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .subscription-card h2 {
+        color: #2c3e50;
+        margin-top: 0;
+    }
+
+    .plan-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .status-badge.active {
+        background: #e8f5e9;
+        color: #27ae60;
+    }
+
+    .status-badge.cancelled {
+        background: #ffebee;
+        color: #e74c3c;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .info-value {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sidebar-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .sidebar-card h3 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+
+    .action-button {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        margin-top: 1rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .action-button.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .action-button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .action-button.danger {
+        background: #ffebee;
+        color: #e74c3c;
+    }
+
+    .action-button.danger:hover {
+        background: #ffcdd2;
+    }
+
+    .transactions-section {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .transactions-section h2 {
+        color: #2c3e50;
+        margin-top: 0;
+    }
+
+    .transaction-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .transaction-table th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .transaction-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .transaction-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .status-completed {
+        color: #27ae60;
+        font-weight: 600;
+    }
+
+    .status-failed {
+        color: #e74c3c;
+        font-weight: 600;
+    }
+
+    .no-transactions {
+        text-align: center;
+        color: #6c757d;
+        padding: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-content {
+            grid-template-columns: 1fr;
+        }
+
+        .transaction-table {
+            font-size: 0.9rem;
+        }
+
+        .transaction-table th, .transaction-table td {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Subscription Dashboard</h1>
+    <p>Manage your premium subscription</p>
+</div>
+
+<div class="dashboard-content">
+    <!-- Main Subscription Card -->
+    <div class="subscription-card">
+        <h2>Current Subscription</h2>
+        
+        {% if subscription and subscription.is_active_subscription %}
+            <div class="plan-badge">{{ subscription.package.name }}</div>
+            <div class="status-badge active">Active</div>
+            
+            <div class="info-row">
+                <span class="info-label">Plan:</span>
+                <span class="info-value">{{ subscription.package.name }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Price:</span>
+                <span class="info-value">${{ subscription.package.price }}/month</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value" style="color: #27ae60;">Active</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Renews:</span>
+                <span class="info-value">{{ subscription.expires_at|date:"M d, Y" }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Days Remaining:</span>
+                <span class="info-value">{{ subscription.days_until_expiry }} days</span>
+            </div>
+
+            <form method="POST" action="{% url 'cancel_subscription' %}" style="margin-top: 1.5rem;">
+                {% csrf_token %}
+                <button type="submit" class="action-button danger" onclick="return confirm('Are you sure you want to cancel? You\'ll retain access until your billing period ends.')">
+                    Cancel Subscription
+                </button>
+            </form>
+
+        {% else %}
+            <p style="color: #6c757d; margin-bottom: 1rem;">You don't have an active subscription.</p>
+            <a href="{% url 'pricing_page' %}" class="action-button primary">
+                View Pricing Plans
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        {% if subscription and subscription.package %}
+        <div class="sidebar-card">
+            <h3>Storage</h3>
+            <p style="font-size: 2rem; color: #667eea; margin: 0;">{{ subscription.package.storage_gb }}GB</p>
+            <small style="color: #6c757d;">Available Storage</small>
+        </div>
+
+        <div class="sidebar-card">
+            <h3>Features</h3>
+            <ul style="list-style: none; padding: 0; text-align: left; font-size: 0.9rem; color: #6c757d;">
+                <li>{% if subscription.package.smart_matches_enabled %}✓{% else %}✗{% endif %} Smart Matching</li>
+                <li>{% if subscription.package.anniversary_notifications %}✓{% else %}✗{% endif %} Anniversaries</li>
+                <li>{% if subscription.package.family_tree_advanced %}✓{% else %}✗{% endif %} Family Tree</li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payment Transactions -->
+<div class="transactions-section">
+    <h2>Payment History</h2>
+    
+    {% if transactions %}
+    <table class="transaction-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Transaction ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                <td>${{ transaction.amount }}</td>
+                <td>
+                    {% if transaction.status == 'completed' %}
+                    <span class="status-completed">Completed</span>
+                    {% elif transaction.status == 'failed' %}
+                    <span class="status-failed">Failed</span>
+                    {% else %}
+                    <span>{{ transaction.status|title }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-family: monospace; font-size: 0.85rem;">
+                    {{ transaction.stripe_payment_intent_id|truncatechars:12 }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-transactions">
+        <p>No payment transactions yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin-top: 2rem; padding: 2rem; background: #f8f9fa; border-radius: 12px;">
+    <p>Need help? Contact us at <strong>support@memorialheritage.com</strong></p>
+</div>
+{% endblock %}

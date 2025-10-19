@@ -1,21 +1,7 @@
 """
 URL configuration for memohera_project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-# Updated memohera_project/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
@@ -23,15 +9,15 @@ from django.conf.urls.i18n import i18n_patterns
 from memorials.views import (
     home, create_memorial, browse_memorials, about, signup, my_memorials, 
     add_family_relationship, approve_family_relationship, logout_view,
-    memorial_share, get_social_sharing_links,privacy_policy,change_password,edit_memorial,
-    suggest_relationship,manage_relationship_suggestions,approve_relationship_suggestion,
-    reject_relationship_suggestion,family_tree_view,notifications_list,mark_notification_read,
-    mark_all_notifications_read,notification_settings,memorial_reminder_settings,upgrade_to_premium,
-    smart_match_suggestions,accept_smart_match,dismiss_smart_match,archive_all_smart_matches
-
-
-
+    memorial_share, get_social_sharing_links, privacy_policy, change_password, edit_memorial,
+    suggest_relationship, manage_relationship_suggestions, approve_relationship_suggestion,
+    reject_relationship_suggestion, family_tree_view, notifications_list, mark_notification_read,
+    mark_all_notifications_read, notification_settings, memorial_reminder_settings, upgrade_to_premium,
+    smart_match_suggestions, accept_smart_match, dismiss_smart_match, archive_all_smart_matches,
+    pricing_page, create_checkout_session, payment_success, subscription_dashboard,
+    cancel_subscription
 )
+from memorials import webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,7 +38,6 @@ urlpatterns += i18n_patterns(
 
     # Auth
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    # path('logout/', auth_views.LogoutView.as_view(next_page='about'), name='logout'),
     path('logout/', logout_view, name='logout'),
     path('signup/', signup, name='signup'),
     path('privacy-policy/', privacy_policy, name='privacy_policy'),
@@ -70,7 +55,7 @@ urlpatterns += i18n_patterns(
     path('notification/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
     path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
 
-    # # Sharing URLs
+    # Sharing URLs
     path('api/memorial/<int:memorial_id>/share-links/', get_social_sharing_links, name='get_social_sharing_links'),
 
     # Notification settings URLs
@@ -84,8 +69,18 @@ urlpatterns += i18n_patterns(
     path('smart-match/dismiss/<int:my_memorial_id>/<int:suggested_memorial_id>/', dismiss_smart_match, name='dismiss_smart_match'),
     path('smart-match/archive/', archive_all_smart_matches, name='archive_smart_matches'),
 
+    # Premium/Pricing URLs
+    path('pricing/', pricing_page, name='pricing_page'),
+    path('checkout/<int:package_id>/', create_checkout_session, name='create_checkout'),
+    path('premium/success/', payment_success, name='payment_success'),
+    path('subscription/dashboard/', subscription_dashboard, name='subscription_dashboard'),
+    path('subscription/cancel/', cancel_subscription, name='cancel_subscription'),
 
     path('change-password/', change_password, name='change_password'),
-    prefix_default_language=False,  # Don't add /en/ for English URLs
+    prefix_default_language=False,
 )
 
+# Stripe webhook (outside of language patterns - webhooks shouldn't have /en/ prefix)
+urlpatterns += [
+    path('webhook/stripe/', webhook.stripe_webhook, name='stripe_webhook'),
+]
