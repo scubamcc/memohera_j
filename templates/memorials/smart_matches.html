@@ -1,7 +1,3 @@
-<!-- ============================================================================ -->
-<!-- templates/memorials/smart_matches.html - UPDATED for your URL structure -->
-<!-- ============================================================================ -->
-
 {% extends "base.html" %}
 {% load static %}
 
@@ -91,13 +87,12 @@
                 {% for suggestion in group.matches %}
                 <div class="p-6 hover:bg-gray-50 transition-colors">
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <!-- Match Info -->
-                        <div class="lg:col-span-2">
-                            <a href="{% url 'memorial_detail' suggestion.suggested_memorial.id %}" class="group">
-                                <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                    {{ suggestion.suggested_memorial.full_name }}
-                                </h3>
-                            </a>
+                        <!-- Match Info - CLICKABLE TO OPEN MODAL -->
+                        <div class="lg:col-span-2 cursor-pointer hover:opacity-80 transition-opacity" 
+                             onclick="openMemorialModal({{ suggestion.suggested_memorial.id }})">
+                            <h3 class="text-xl font-bold text-gray-900 hover:text-blue-600">
+                                {{ suggestion.suggested_memorial.full_name }}
+                            </h3>
                             <p class="text-gray-600 text-sm mt-2">
                                 {% if suggestion.suggested_memorial.dob %}
                                     Born {{ suggestion.suggested_memorial.dob|date:"F d, Y" }}
@@ -176,6 +171,25 @@
     {% endif %}
 </div>
 
+<!-- Memorial Detail Modal (Same as Browse Page) -->
+<div class="modal fade" id="memorialModal" tabindex="-1" aria-labelledby="memorialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <!-- Content will be loaded here -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     @keyframes fadeIn {
         from {
@@ -192,32 +206,17 @@
         animation: fadeIn 0.3s ease-out;
     }
 
-    /* Bootstrap Grid Utilities */
-    .grid {
-        display: grid;
-    }
-
-    .grid-cols-1 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-
-    .md\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
+    /* Grid & Layout Utilities */
+    .grid { display: grid; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    
     @media (max-width: 768px) {
-        .md\:grid-cols-3 {
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-        }
+        .md\:grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
     }
 
-    .lg\:col-span-2 {
-        grid-column: span 2 / span 2;
-    }
-
-    .lg\:col-span-4 {
-        grid-column: span 4 / span 4;
-    }
+    .lg\:col-span-2 { grid-column: span 2 / span 2; }
+    .lg\:col-span-4 { grid-column: span 4 / span 4; }
 
     @media (max-width: 1024px) {
         .lg\:col-span-2,
@@ -226,215 +225,176 @@
         }
     }
 
-    /* Utility Classes */
-    .gap-6 {
-        gap: 1.5rem;
-    }
+    .gap-6 { gap: 1.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .p-6 { padding: 1.5rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
 
-    .gap-3 {
-        gap: 0.75rem;
-    }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-full { border-radius: 9999px; }
 
-    .p-6 {
-        padding: 1.5rem;
-    }
+    .w-full { width: 100%; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .text-center { text-align: center; }
 
-    .px-4 {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
+    .text-sm { font-size: 0.875rem; }
+    .text-xl { font-size: 1.25rem; }
+    .text-2xl { font-size: 1.5rem; }
+    .text-3xl { font-size: 1.875rem; }
+    .text-4xl { font-size: 2.25rem; }
 
-    .py-8 {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
 
-    .mb-8 {
-        margin-bottom: 2rem;
-    }
+    .text-gray-500 { color: #6b7280; }
+    .text-gray-600 { color: #4b5563; }
+    .text-gray-700 { color: #374151; }
+    .text-gray-800 { color: #1f2937; }
+    .text-gray-900 { color: #111827; }
+    .text-white { color: white; }
 
-    .mb-2 {
-        margin-bottom: 0.5rem;
-    }
+    .bg-white { background-color: white; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-blue-700 { background-color: #1d4ed8; }
+    .bg-green-600 { background-color: #16a34a; }
+    .bg-gray-300 { background-color: #d1d5db; }
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-blue-100 { background-color: #dbeafe; }
+    .text-blue-800 { color: #1e40af; }
+    .text-blue-600 { color: #2563eb; }
 
-    .mt-1 {
-        margin-top: 0.25rem;
-    }
+    .border { border: 1px solid; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .divide-y > * + * { border-top: 1px solid #e5e7eb; }
 
-    .mt-2 {
-        margin-top: 0.5rem;
-    }
+    .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    .shadow-lg { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
 
-    .mt-4 {
-        margin-top: 1rem;
-    }
+    .transition-colors { transition: color 0.2s, background-color 0.2s; }
+    .transition-shadow { transition: box-shadow 0.2s; }
+    .transition-opacity { transition: opacity 0.2s; }
 
-    .rounded-lg {
-        border-radius: 0.5rem;
-    }
-
-    .rounded-xl {
-        border-radius: 0.75rem;
-    }
-
-    .rounded-full {
-        border-radius: 9999px;
-    }
-
-    .w-full {
-        width: 100%;
-    }
-
-    .flex {
-        display: flex;
-    }
-
-    .flex-col {
-        flex-direction: column;
-    }
-
-    .items-center {
-        align-items: center;
-    }
-
-    .justify-between {
-        justify-content: space-between;
-    }
-
-    .justify-center {
-        justify-content: center;
-    }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .text-sm {
-        font-size: 0.875rem;
-    }
-
-    .text-xl {
-        font-size: 1.25rem;
-    }
-
-    .text-2xl {
-        font-size: 1.5rem;
-    }
-
-    .text-3xl {
-        font-size: 1.875rem;
-    }
-
-    .text-4xl {
-        font-size: 2.25rem;
-    }
-
-    .font-bold {
-        font-weight: 700;
-    }
-
-    .font-semibold {
-        font-weight: 600;
-    }
-
-    .font-medium {
-        font-weight: 500;
-    }
-
-    .text-gray-600 {
-        color: #4b5563;
-    }
-
-    .text-gray-700 {
-        color: #374151;
-    }
-
-    .text-gray-800 {
-        color: #1f2937;
-    }
-
-    .text-gray-900 {
-        color: #111827;
-    }
-
-    .text-white {
-        color: white;
-    }
-
-    .bg-white {
-        background-color: white;
-    }
-
-    .bg-blue-600 {
-        background-color: #2563eb;
-    }
-
-    .bg-blue-700 {
-        background-color: #1d4ed8;
-    }
-
-    .bg-green-600 {
-        background-color: #16a34a;
-    }
-
-    .bg-gray-300 {
-        background-color: #d1d5db;
-    }
-
-    .bg-gray-50 {
-        background-color: #f9fafb;
-    }
-
-    .bg-blue-100 {
-        background-color: #dbeafe;
-    }
-
-    .text-blue-800 {
-        color: #1e40af;
-    }
-
-    .border {
-        border: 1px solid;
-    }
-
-    .border-gray-200 {
-        border-color: #e5e7eb;
-    }
-
-    .divide-y > * + * {
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .shadow-md {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .shadow-lg {
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .transition-colors {
-        transition: color 0.2s, background-color 0.2s;
-    }
-
-    .transition-shadow {
-        transition: box-shadow 0.2s;
-    }
-
-    .hover\:bg-green-700:hover {
-        background-color: #15803d;
-    }
-
-    .hover\:bg-gray-400:hover {
-        background-color: #9ca3af;
-    }
-
-    .hover\:text-blue-600:hover {
-        color: #2563eb;
-    }
-
-    .hover\:shadow-lg:hover {
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    }
+    .hover\:bg-green-700:hover { background-color: #15803d; }
+    .hover\:bg-gray-400:hover { background-color: #9ca3af; }
+    .hover\:text-blue-600:hover { color: #2563eb; }
+    .hover\:shadow-lg:hover { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
+    .hover\:opacity-80:hover { opacity: 0.8; }
 </style>
+
+<script>
+// Define memorial data globally
+const memorialData = {};
+
+// Populate memorial data
+{% for group in suggestions %}
+    {% for suggestion in group.matches %}
+    memorialData["{{ suggestion.suggested_memorial.id }}"] = {
+        "id": {{ suggestion.suggested_memorial.id }},
+        "name": "{{ suggestion.suggested_memorial.full_name|escapejs }}",
+        "country": "{{ suggestion.suggested_memorial.country.name|escapejs }}",
+        "dob": "{{ suggestion.suggested_memorial.dob|date:'F j, Y'|escapejs }}",
+        "dod": "{{ suggestion.suggested_memorial.dod|date:'F j, Y'|escapejs }}",
+        "story": "{{ suggestion.suggested_memorial.story|escapejs }}",
+        "image": {% if suggestion.suggested_memorial.image_url %}"{{ suggestion.suggested_memorial.image_url.url|escapejs }}"{% else %}null{% endif %},
+        "created_date": "{{ suggestion.suggested_memorial.created_at|date:'F j, Y'|escapejs }}"
+    };
+    {% endfor %}
+{% endfor %}
+
+console.log('Memorial Data Loaded:', memorialData);
+
+// Define function globally so onclick can access it
+function openMemorialModal(memorialId) {
+    console.log('Opening modal for:', memorialId);
+    const memorial = memorialData[memorialId];
+    if (!memorial) {
+        console.error('Memorial not found:', memorialId);
+        return;
+    }
+    
+    console.log('Memorial found:', memorial);
+    
+    const modalContent = document.getElementById('modalContent');
+    if (!modalContent) {
+        console.error('Modal content element not found');
+        return;
+    }
+    
+    // Close any existing modal
+    const modalElement = document.getElementById('memorialModal');
+    const existingModal = bootstrap.Modal.getInstance(modalElement);
+    if (existingModal) {
+        existingModal.hide();
+    }
+    
+    // Remove leftover backdrops
+    setTimeout(function() {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 300);
+    
+    // Build action buttons
+    let actionButtonsHtml = '';
+    {% if user.is_authenticated %}
+    actionButtonsHtml = `
+        <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
+                <i class="fas fa-link me-1"></i>Suggest Connection
+            </a>
+            <button class="btn btn-outline-primary btn-sm" onclick="shareMemorial(${memorial.id})">
+                <i class="fab fa-facebook-square me-1"></i>Share
+            </button>
+        </div>
+    `;
+    {% endif %}
+    
+    // Build modal content
+    modalContent.innerHTML = `
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                ${memorial.image ? 
+                    `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
+                    `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
+                        <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                        <span>No Photo</span>
+                    </div>`
+                }
+            </div>
+            <div class="col-md-8">
+                <h2 style="font-size: 2rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.5rem;">${memorial.name}</h2>
+                <div style="color: #3498db; font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem;">${memorial.country}</div>
+                <div style="color: #6c757d; font-size: 1rem; margin-bottom: 1.5rem;">${memorial.dob} – ${memorial.dod}</div>
+                
+                <div style="font-size: 1rem; line-height: 1.7; color: #2c3e50; margin-bottom: 1.5rem;">
+                    ${memorial.story.replace(/\n/g, '<br>')}
+                </div>
+                
+                ${actionButtonsHtml}
+                
+                <div style="font-size: 0.9rem; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 1rem; margin-top: 1rem;">
+                    Memorial created on ${memorial.created_date}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+}
+</script>
 {% endblock %}
