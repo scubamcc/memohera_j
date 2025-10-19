@@ -163,9 +163,11 @@ class FamilyRelationship(models.Model):
             self.save()
             return True
         return False
+
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     is_premium = models.BooleanField(default=False)
+    premium_until = models.DateTimeField(null=True, blank=True)
     
     # Anniversary notification settings
     enable_anniversary_notifications = models.BooleanField(default=True)
@@ -177,7 +179,21 @@ class UserProfile(models.Model):
     notify_week_before = models.BooleanField(default=True)
     notify_day_before = models.BooleanField(default=True)
     notify_on_day = models.BooleanField(default=True)
-
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {'Premium' if self.is_premium else 'Free'}"
+    
+    @property
+    def is_premium_active(self):
+        """Check if premium is currently active"""
+        if not self.is_premium:
+            return False
+        if self.premium_until and self.premium_until < timezone.now():
+            return False
+        return True
 
 class MemorialReminderSettings(models.Model):
     memorial = models.OneToOneField('Memorial', on_delete=models.CASCADE)
@@ -250,5 +266,47 @@ class Notification(models.Model):
             self.is_read = True
             self.read_at = timezone.now()
             self.save()
+
+class SmartMatchSuggestion(models.Model):
+    """Tracks AI-generated family relationship suggestions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('accepted', 'Accepted'),
+        ('dismissed', 'Dismissed'),
+        ('archived', 'Archived'),
+    ]
+    
+    my_memorial = models.ForeignKey(
+        Memorial,
+        on_delete=models.CASCADE,
+        related_name='smart_suggestions_for'
+    )
+    suggested_memorial = models.ForeignKey(
+        Memorial,
+        on_delete=models.CASCADE,
+        related_name='smart_suggestions_by'
+    )
+    confidence_score = models.IntegerField(default=0)  # 0-100
+    match_reasons = models.JSONField(default=list)  # Store reasons for match
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    user_notified = models.BooleanField(default=False)
+    notification_sent_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('my_memorial', 'suggested_memorial')
+        ordering = ['-confidence_score', '-created_at']
+        indexes = [
+            models.Index(fields=['my_memorial', 'status']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Match: {self.my_memorial.full_name} ↔ {self.suggested_memorial.full_name} ({self.confidence_score}%)"
+
 
 

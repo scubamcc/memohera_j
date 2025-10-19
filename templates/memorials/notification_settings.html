@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Notification Settings - Memorial Heritage{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="settings-container">
+        <div class="settings-header">
+            <h2><i class="fas fa-cog me-2"></i>Notification Settings</h2>
+            <p class="text-muted">Customize how and when you receive anniversary notifications</p>
+            
+            {% if not profile.is_premium_active %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-crown me-2"></i>
+                    <strong>Premium Feature:</strong> Automatic anniversary notifications are available for Premium members only.
+                    <a href="{% url 'upgrade_to_premium' %}" class="btn btn-sm btn-primary ms-3">
+                        <i class="fas fa-star me-1"></i>Upgrade to Premium
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-crown me-2"></i>
+                    <strong>Premium Active</strong> - You have access to automatic anniversary notifications!
+                </div>
+            {% endif %}
+        </div>
+
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+            
+            <!-- Global Settings Card -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-globe me-2"></i>Global Notification Preferences</h5>
+                    <p class="text-muted mb-0">These settings apply to all your memorials by default</p>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Master Toggle -->
+                    <div class="setting-item master-toggle">
+                        <div class="setting-info">
+                            <label for="{{ form.enable_anniversary_notifications.id_for_label }}" class="setting-label">
+                                <i class="fas fa-bell me-2"></i>{{ form.enable_anniversary_notifications.label }}
+                            </label>
+                            <p class="setting-description">{{ form.enable_anniversary_notifications.help_text }}</p>
+                        </div>
+                        <div class="setting-control">
+                            {{ form.enable_anniversary_notifications }}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Anniversary Types -->
+                    <div class="setting-group" id="anniversary-types" {% if not profile.is_premium_active %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
+                        <h6 class="group-title">What to Notify Me About</h6>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_death_anniversaries.id_for_label }}" class="setting-label">
+                                    {{ form.notify_death_anniversaries.label }}
+                                </label>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_death_anniversaries }}
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_birthdays.id_for_label }}" class="setting-label">
+                                    {{ form.notify_birthdays.label }}
+                                </label>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_birthdays }}
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_milestones.id_for_label }}" class="setting-label">
+                                    {{ form.notify_milestones.label }}
+                                </label>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_milestones }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Timing Preferences -->
+                    <div class="setting-group" id="timing-preferences" {% if not profile.is_premium_active %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
+                        <h6 class="group-title">When to Notify Me</h6>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_week_before.id_for_label }}" class="setting-label">
+                                    {{ form.notify_week_before.label }}
+                                </label>
+                                <p class="setting-description">{{ form.notify_week_before.help_text }}</p>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_week_before }}
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_day_before.id_for_label }}" class="setting-label">
+                                    {{ form.notify_day_before.label }}
+                                </label>
+                                <p class="setting-description">{{ form.notify_day_before.help_text }}</p>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_day_before }}
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label for="{{ form.notify_on_day.id_for_label }}" class="setting-label">
+                                    {{ form.notify_on_day.label }}
+                                </label>
+                                <p class="setting-description">{{ form.notify_on_day.help_text }}</p>
+                            </div>
+                            <div class="setting-control">
+                                {{ form.notify_on_day }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary" {% if not profile.is_premium_active %}disabled{% endif %}>
+                        <i class="fas fa-save me-2"></i>Save Settings
+                    </button>
+                    <a href="{% url 'my_memorials' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Per-Memorial Settings -->
+        {% if profile.is_premium_active and user_memorials %}
+            <div class="settings-card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-heart me-2"></i>Per-Memorial Settings</h5>
+                    <p class="text-muted mb-0">Customize notifications for individual memorials</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="memorial-list">
+                        {% for memorial in user_memorials %}
+                            <div class="memorial-settings-item">
+                                <div class="memorial-info">
+                                    {% if memorial.image_url %}
+                                        <img src="{{ memorial.image_url.url }}" alt="{{ memorial.full_name }}" class="memorial-avatar">
+                                    {% else %}
+                                        <div class="memorial-avatar-placeholder">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="memorial-details">
+                                        <h6>{{ memorial.full_name }}</h6>
+                                        <small class="text-muted">
+                                            {{ memorial.dob|date:"Y" }} - {{ memorial.dod|date:"Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="memorial-actions">
+                                    <a href="{% url 'memorial_reminder_settings' memorial.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-cog me-1"></i>Customize
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.settings-container {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.settings-header {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.settings-header h2 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.settings-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.card-header h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.card-footer {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 1rem;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.setting-item.master-toggle {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--secondary-color);
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    cursor: pointer;
+}
+
+.setting-description {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.setting-control {
+    margin-left: 2rem;
+}
+
+.form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+}
+
+.setting-group {
+    margin-top: 1.5rem;
+}
+
+.group-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.memorial-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.memorial-settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.memorial-settings-item:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.memorial-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.memorial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.memorial-avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.memorial-details h6 {
+    margin: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .settings-container {
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+    
+    .settings-header,
+    .card-header,
+    .card-body,
+    .card-footer {
+        padding: 1.5rem;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .setting-control {
+        margin-left: 0;
+    }
+    
+    .memorial-settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .memorial-actions {
+        width: 100%;
+    }
+    
+    .memorial-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

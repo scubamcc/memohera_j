@@ -8,7 +8,6 @@ from django.contrib import messages
 from django.urls import reverse
 from .forms import MemorialForm, SuggestRelationshipForm
 from django.db.models import Q
-
 from django.core.paginator import Paginator
 from django_countries import countries
 from django.utils.translation import gettext as _
@@ -19,12 +18,300 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.core.mail import send_mail
-
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import get_object_or_404
+from .models import Memorial, FamilyRelationship, Notification, SmartMatchSuggestion
+from memorials.matching_algorithm import find_potential_matches
+from .forms import UserNotificationSettingsForm, MemorialReminderSettingsForm
+from .models import UserProfile, MemorialReminderSettings
+from difflib import SequenceMatcher
+from django.db import models
+from django.views.decorators.http import require_http_methods
 
-from .models import Memorial, FamilyRelationship, Notification
+
+
+@login_required
+def smart_match_suggestions(request):
+    """Show AI-powered memorial match suggestions for user's memorials"""
+    
+    # Get all user's memorials
+    user_memorials = Memorial.objects.filter(
+        created_by=request.user,
+        approved=True
+    )
+    
+    # Get all smart match suggestions for user's memorials
+    suggestions = SmartMatchSuggestion.objects.filter(
+        my_memorial__in=user_memorials,
+        status='pending'
+    ).select_related('my_memorial', 'suggested_memorial')
+    
+    # Group by memorial for easier template rendering
+    grouped_suggestions = {}
+    for suggestion in suggestions:
+        memorial_id = suggestion.my_memorial.id
+        if memorial_id not in grouped_suggestions:
+            grouped_suggestions[memorial_id] = {
+                'memorial': suggestion.my_memorial,
+                'matches': []
+            }
+        grouped_suggestions[memorial_id]['matches'].append(suggestion)
+    
+    all_suggestions = list(grouped_suggestions.values())
+    
+    context = {
+        'suggestions': all_suggestions,
+        'total_pending': suggestions.count(),
+    }
+    
+    return render(request, 'memorials/smart_matches.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+def accept_smart_match(request, my_memorial_id, suggested_memorial_id):
+    """Accept a smart match and redirect to suggest relationship page"""
+    my_memorial = get_object_or_404(
+        Memorial,
+        id=my_memorial_id,
+        created_by=request.user
+    )
+    suggested_memorial = get_object_or_404(Memorial, id=suggested_memorial_id)
+    
+    # Update suggestion status to 'accepted'
+    SmartMatchSuggestion.objects.filter(
+        my_memorial=my_memorial,
+        suggested_memorial=suggested_memorial
+    ).update(status='accepted')
+    
+    # Redirect to suggest relationship page with pre-filled data
+    return redirect(
+        f'/memorial/{suggested_memorial_id}/suggest-relationship/?my_memorial={my_memorial_id}'
+    )
+
+@login_required
+@require_http_methods(["POST"])
+def dismiss_smart_match(request, my_memorial_id, suggested_memorial_id):
+    """Dismiss a smart match suggestion"""
+    my_memorial = get_object_or_404(
+        Memorial,
+        id=my_memorial_id,
+        created_by=request.user
+    )
+    suggested_memorial = get_object_or_404(Memorial, id=suggested_memorial_id)
+    
+    # Update suggestion status to 'dismissed'
+    SmartMatchSuggestion.objects.filter(
+        my_memorial=my_memorial,
+        suggested_memorial=suggested_memorial
+    ).update(status='dismissed')
+    
+    messages.success(request, "Suggestion dismissed.")
+    return redirect('smart_match_suggestions')
+
+@login_required
+def archive_all_smart_matches(request):
+    """Archive all pending smart matches for a memorial"""
+    if request.method == 'POST':
+        memorial_id = request.POST.get('memorial_id')
+        memorial = get_object_or_404(
+            Memorial,
+            id=memorial_id,
+            created_by=request.user
+        )
+        
+        count, _ = SmartMatchSuggestion.objects.filter(
+            my_memorial=memorial,
+            status='pending'
+        ).update(status='archived')
+        
+        messages.success(request, f"Archived {count} suggestions.")
+        return redirect('smart_match_suggestions')
+    
+    return redirect('smart_match_suggestions')
+
+def get_smart_matches_context(request):
+    """Helper function to get smart matches count for navbar"""
+    if request.user.is_authenticated:
+        user_memorials = Memorial.objects.filter(
+            created_by=request.user,
+            approved=True
+        ).count()
+        
+        if user_memorials > 0:
+            # Count unreviewed matches
+            unreviewed = SmartMatchSuggestion.objects.filter(
+                my_memorial__created_by=request.user,
+                status='pending'
+            ).count()
+            return {'unreviewed_matches': unreviewed}
+    
+    return {'unreviewed_matches': 0}
+
+
+
+
+def find_potential_matches(memorial, limit=5):
+    """
+    Find potential family connections for a memorial using AI-like matching
+    Returns list of (memorial, confidence_score, reasons) tuples
+    """
+    potential_matches = []
+    
+    # Get all other approved memorials (exclude current one and same creator's memorials initially)
+    other_memorials = Memorial.objects.filter(
+        approved=True
+    ).exclude(
+        id=memorial.id
+    ).exclude(
+        created_by=memorial.created_by  # Exclude own memorials for now
+    )
+    
+    # Check if already connected
+    existing_relationships = set()
+    for rel in FamilyRelationship.objects.filter(
+        models.Q(person_a=memorial) | models.Q(person_b=memorial)
+    ).values_list('person_a_id', 'person_b_id'):
+        existing_relationships.add(rel[0])
+        existing_relationships.add(rel[1])
+    
+    # Filter out already connected memorials
+    other_memorials = other_memorials.exclude(id__in=existing_relationships)
+    
+    for other in other_memorials:
+        score = 0
+        reasons = []
+        
+        # 1. Name similarity (40 points max)
+        name_similarity = calculate_name_similarity(memorial.full_name, other.full_name)
+        if name_similarity > 0.5:
+            score += int(name_similarity * 40)
+            if name_similarity > 0.8:
+                reasons.append(f"Very similar names ({int(name_similarity * 100)}% match)")
+            else:
+                reasons.append(f"Similar names ({int(name_similarity * 100)}% match)")
+        
+        # 2. Same last name (20 points)
+        if has_same_last_name(memorial.full_name, other.full_name):
+            score += 20
+            reasons.append("Same last name")
+        
+        # 3. Same country (15 points)
+        if memorial.country == other.country:
+            score += 15
+            reasons.append(f"Both from {memorial.country.name}")
+        
+        # 4. Similar birth years (15 points)
+        if memorial.dob and other.dob:
+            year_diff = abs(memorial.dob.year - other.dob.year)
+            if year_diff <= 5:
+                score += 15 - year_diff
+                reasons.append(f"Born within {year_diff} years of each other")
+            elif year_diff <= 30:
+                score += max(5 - (year_diff - 5) // 5, 0)
+                reasons.append(f"Similar generation (born {year_diff} years apart)")
+        
+        # 5. Overlapping lifetimes (10 points)
+        if memorial.dob and memorial.dod and other.dob and other.dod:
+            if lifetimes_overlap(memorial.dob, memorial.dod, other.dob, other.dod):
+                score += 10
+                reasons.append("Lived during the same time period")
+        
+        # Only include matches with score > 30 (threshold)
+        if score >= 30:
+            potential_matches.append({
+                'memorial': other,
+                'score': score,
+                'reasons': reasons
+            })
+    
+    # Sort by score (highest first) and return top matches
+    potential_matches.sort(key=lambda x: x['score'], reverse=True)
+    return potential_matches[:limit]
+
+
+def calculate_name_similarity(name1, name2):
+    """Calculate similarity between two names using sequence matching"""
+    name1 = name1.lower().strip()
+    name2 = name2.lower().strip()
+    return SequenceMatcher(None, name1, name2).ratio()
+
+
+def has_same_last_name(name1, name2):
+    """Check if two names have the same last name"""
+    last1 = name1.strip().split()[-1].lower()
+    last2 = name2.strip().split()[-1].lower()
+    return last1 == last2
+
+
+def lifetimes_overlap(dob1, dod1, dob2, dod2):
+    """Check if two people's lifetimes overlapped"""
+    # They overlap if person1 was alive when person2 was born or vice versa
+    return (dob1 <= dod2 and dob2 <= dod1)
+
+@login_required
+def upgrade_to_premium(request):
+    """Temporary upgrade page - redirect to settings for now"""
+    messages.info(request, 'Premium upgrade feature coming soon!')
+    return redirect('notification_settings')
+
+
+@login_required
+def notification_settings(request):
+    """User notification preferences page"""
+    # Get or create user profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        form = UserNotificationSettingsForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Notification settings updated successfully!')
+            return redirect('notification_settings')
+    else:
+        form = UserNotificationSettingsForm(instance=profile)
+    
+    # Get user's memorials for per-memorial settings
+    user_memorials = Memorial.objects.filter(created_by=request.user, approved=True).order_by('full_name')
+    
+    context = {
+        'form': form,
+        'profile': profile,
+        'user_memorials': user_memorials,
+    }
+    
+    return render(request, 'memorials/notification_settings.html', context)
+
+
+@login_required
+def memorial_reminder_settings(request, memorial_id):
+    """Per-memorial notification settings"""
+    memorial = get_object_or_404(Memorial, id=memorial_id, created_by=request.user)
+    
+    # Get or create reminder settings
+    settings_obj, created = MemorialReminderSettings.objects.get_or_create(
+        memorial=memorial,
+        defaults={'created_by': request.user}
+    )
+    
+    if request.method == 'POST':
+        form = MemorialReminderSettingsForm(request.POST, instance=settings_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Reminder settings for {memorial.full_name} updated successfully!')
+            return redirect('notification_settings')
+    else:
+        form = MemorialReminderSettingsForm(instance=settings_obj)
+    
+    context = {
+        'form': form,
+        'memorial': memorial,
+        'settings': settings_obj,
+    }
+    
+    return render(request, 'memorials/memorial_reminder_settings.html', context)
+
+
 
 def create_notification(user, notification_type, title, message, action_url='', **kwargs):
     """Helper function to create notifications"""

@@ -1,0 +1,197 @@
+
+<!-- ============================================================================ -->
+<!-- templates/notifications/smart_match_email.html - HTML Email -->
+<!-- ============================================================================ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+        }
+        .match-item {
+            background: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .match-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .match-score {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+        .match-reasons {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .reason-tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .stat {
+            flex: 1;
+            padding: 15px;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 New Family Connections Found!</h1>
+            <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Our AI discovered potential matches for your memorials
+            </p>
+        </div>
+
+        <div class="content">
+            <p>Hi {{ user.first_name|default:user.username }},</p>
+            
+            <p>Great news! Our smart matching system has discovered <strong>{{ total_matches }} potential family connection{{ total_matches|pluralize }}</strong> for your memorials. These could be relatives you haven't connected yet!</p>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">{{ total_matches }}</div>
+                    <div class="stat-label">Matches Found</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">⭐</div>
+                    <div class="stat-label">High Quality</div>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 30px; margin-bottom: 20px; color: #333;">Suggested Connections:</h2>
+
+            {% for suggestion in suggestions %}
+            <div class="match-item">
+                <div class="match-name">{{ suggestion.suggested_memorial.full_name }}</div>
+                
+                <div class="match-score">
+                    {{ suggestion.confidence_score }}% Match
+                </div>
+
+                {% if suggestion.suggested_memorial.dob or suggestion.suggested_memorial.dod %}
+                <div style="font-size: 13px; color: #666; margin-bottom: 12px;">
+                    {% if suggestion.suggested_memorial.dob %}
+                        Born {{ suggestion.suggested_memorial.dob|date:"F d, Y" }}
+                    {% endif %}
+                    {% if suggestion.suggested_memorial.dod %}
+                        • Passed {{ suggestion.suggested_memorial.dod|date:"F d, Y" }}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="match-reasons">
+                    <strong style="color: #333;">Why we think they're connected:</strong><br>
+                    {% for reason in suggestion.match_reasons %}
+                        <span class="reason-tag">{{ reason }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="https://yourdomain.com/smart-matches/" class="cta-button">
+                    Review All Matches
+                </a>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 13px; color: #999;">
+                You can review, accept, or dismiss these suggestions anytime in your dashboard.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                &copy; 2025 Memorial Heritage. All rights reserved.
+            </p>
+            <p style="margin: 0;">
+                <a href="https://yourdomain.com/settings/" style="color: #667eea; text-decoration: none;">Update Preferences</a> | 
+                <a href="https://yourdomain.com/help/" style="color: #667eea; text-decoration: none;">Help</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

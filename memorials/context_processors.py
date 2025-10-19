@@ -4,6 +4,8 @@ from django.conf import settings
 from django.utils.translation import get_language
 from .models import FamilyRelationship, Notification
 from django.db.models import Q
+from memorials.models import SmartMatchSuggestion
+
 
 def pending_suggestions_count(request):
     """Add pending suggestions count to all templates"""
@@ -15,7 +17,6 @@ def pending_suggestions_count(request):
         ).count()
         return {'pending_suggestions_count': count}
     return {'pending_suggestions_count': 0}
-
 
 def language_context(request):
     """
@@ -82,3 +83,17 @@ def pending_suggestions_count(request):
         'pending_suggestions_count': 0,
         'unread_notifications_count': 0
     }
+
+def smart_matches(request):
+    """Make smart matches available in all templates"""
+    return get_smart_matches_context(request)
+
+def smart_matches_context(request):
+    """Make smart matches available in all templates"""
+    if request.user.is_authenticated:
+        unreviewed = SmartMatchSuggestion.objects.filter(
+            my_memorial__created_by=request.user,
+            status='pending'
+        ).count()
+        return {'unreviewed_matches': unreviewed}
+    return {'unreviewed_matches': 0}

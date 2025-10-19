@@ -464,6 +464,17 @@
                     <ul class="navbar-nav">
                         {% if user.is_authenticated %}
                             <ul class="navbar-nav">
+                                
+                                <!-- Smart Matches Badge -->
+                                <li class="nav-item">
+                                    <a class="nav-link position-relative" href="{% url 'smart_match_suggestions' %}" title="AI-Powered Smart Matches">
+                                        <i class="fas fa-wand-magic-sparkles" style="color: #667eea;"></i>
+                                        {% if unreviewed_matches > 0 %}
+                                            <span class="notification-count-badge">{{ unreviewed_matches }}</span>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                                
                                 <!-- Notification Bell -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link position-relative" href="{% url 'notifications_list' %}" id="notificationDropdown">
@@ -498,6 +509,10 @@
                                             {% endif %}
                                         </a></li>
                                         
+                                        <li><a class="dropdown-item" href="{% url 'notification_settings' %}">
+                                            <i class="fas fa-cog me-2"></i>Notification Settings
+                                        </a></li>
+
                                         <li><a class="dropdown-item" href="{% url 'change_password' %}">
                                             <i class="fas fa-key me-2"></i>Change Password
                                         </a></li>

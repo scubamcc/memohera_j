@@ -26,7 +26,11 @@ from memorials.views import (
     memorial_share, get_social_sharing_links,privacy_policy,change_password,edit_memorial,
     suggest_relationship,manage_relationship_suggestions,approve_relationship_suggestion,
     reject_relationship_suggestion,family_tree_view,notifications_list,mark_notification_read,
-    mark_all_notifications_read
+    mark_all_notifications_read,notification_settings,memorial_reminder_settings,upgrade_to_premium,
+    smart_match_suggestions,accept_smart_match,dismiss_smart_match,archive_all_smart_matches
+
+
+
 )
 
 urlpatterns = [
@@ -68,6 +72,18 @@ urlpatterns += i18n_patterns(
 
     # # Sharing URLs
     path('api/memorial/<int:memorial_id>/share-links/', get_social_sharing_links, name='get_social_sharing_links'),
+
+    # Notification settings URLs
+    path('settings/notifications/', notification_settings, name='notification_settings'),
+    path('memorial/<int:memorial_id>/reminder-settings/', memorial_reminder_settings, name='memorial_reminder_settings'),
+    path('upgrade-premium/', upgrade_to_premium, name='upgrade_to_premium'),
+
+    # Smart matching URLs
+    path('smart-matches/', smart_match_suggestions, name='smart_match_suggestions'),
+    path('smart-match/accept/<int:my_memorial_id>/<int:suggested_memorial_id>/', accept_smart_match, name='accept_smart_match'),
+    path('smart-match/dismiss/<int:my_memorial_id>/<int:suggested_memorial_id>/', dismiss_smart_match, name='dismiss_smart_match'),
+    path('smart-match/archive/', archive_all_smart_matches, name='archive_smart_matches'),
+
 
     path('change-password/', change_password, name='change_password'),
     prefix_default_language=False,  # Don't add /en/ for English URLs

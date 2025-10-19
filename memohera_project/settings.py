@@ -72,14 +72,11 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'memorials.context_processors.language_context',
                 'memorials.context_processors.pending_suggestions_count',  # ADD THIS
+                'memorials.context_processors.smart_matches_context',  # ADD THIS LINE
             ],
         },
     },
 ]
-
-
-
-
 
 
 

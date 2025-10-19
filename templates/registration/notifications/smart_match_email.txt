@@ -1,0 +1,34 @@
+<!-- ============================================================================ -->
+<!-- templates/notifications/smart_match_email.txt - Plain Text Email -->
+<!-- ============================================================================ -->
+
+Hi {{ user.first_name|default:user.username }},
+
+Great news! Our smart matching system has discovered {{ total_matches }} potential family connection{{ total_matches|pluralize }} for your memorials.
+
+================================================================================
+
+{% for suggestion in suggestions %}
+
+{{ suggestion.suggested_memorial.full_name }}
+Match Score: {{ suggestion.confidence_score }}%
+
+{% if suggestion.suggested_memorial.dob or suggestion.suggested_memorial.dod %}
+{% if suggestion.suggested_memorial.dob %}Born {{ suggestion.suggested_memorial.dob|date:"F d, Y" }}{% endif %}{% if suggestion.suggested_memorial.dod %} • Passed {{ suggestion.suggested_memorial.dod|date:"F d, Y" }}{% endif %}
+{% endif %}
+
+Why we think they're connected:
+{% for reason in suggestion.match_reasons %}
+  • {{ reason }}
+{% endfor %}
+
+---
+
+{% endfor %}
+
+================================================================================
+
+Review your matches here: https://memohera.com/smart-matches/
+
+Best regards,
+Memorial Heritage Team
