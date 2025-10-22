@@ -1,0 +1,471 @@
+<!-- templates/premium/my_subscription.html -->
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Subscription - Memorial Heritage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .subscription-hero h1 {
+        margin: 0 0 1rem 0;
+        font-size: 2.5rem;
+    }
+
+    .current-plan-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    .current-plan-badge .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .current-plan-badge .plan-status {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .subscription-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .subscription-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .subscription-card h2 {
+        color: #2c3e50;
+        margin-top: 0;
+        font-size: 1.5rem;
+    }
+
+    .subscription-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 1.2rem;
+        color: #2c3e50;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .packages-section h2 {
+        color: #2c3e50;
+        margin-bottom: 2rem;
+    }
+
+    .packages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .package-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .package-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-color: #667eea;
+    }
+
+    .package-card.current {
+        border-color: #27ae60;
+        background: #e8f5e9;
+    }
+
+    .package-card.featured {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        transform: scale(1.05);
+    }
+
+    .package-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .package-price {
+        font-size: 2rem;
+        color: #667eea;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .package-price span {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .package-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .package-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+
+    .package-features li {
+        padding: 0.5rem 0;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .package-features li::before {
+        content: '✓';
+        color: #27ae60;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .package-features li.disabled {
+        opacity: 0.5;
+        color: #bdbdbd;
+    }
+
+    .package-features li.disabled::before {
+        content: '✗';
+        color: #e74c3c;
+    }
+
+    .badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .badge.current {
+        background: #27ae60;
+    }
+
+    .btn-upgrade {
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-upgrade:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-manage {
+        width: 100%;
+        padding: 0.75rem;
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-manage:hover {
+        background: #f8f9fa;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        padding: 0.75rem;
+        background: #ffebee;
+        color: #e74c3c;
+        border: 2px solid #e74c3c;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .transactions-section {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .transaction-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .transaction-table th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .transaction-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .status-completed {
+        color: #27ae60;
+        font-weight: 600;
+    }
+
+    .status-failed {
+        color: #e74c3c;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .subscription-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .packages-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .package-card.featured {
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="subscription-hero">
+        <h1>Subscription Management</h1>
+        <p>Manage your Memorial Heritage subscription</p>
+        {% if subscription and subscription.is_active_subscription %}
+        <div class="current-plan-badge">
+            <div class="plan-name">{{ subscription.package.name }}</div>
+            <div class="plan-status">Active • Renews {{ subscription.expires_at|date:"M d, Y" }}</div>
+        </div>
+        {% else %}
+        <div class="current-plan-badge">
+            <div class="plan-name">Free Plan</div>
+            <div class="plan-status">Upgrade anytime to unlock premium features</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Current Subscription Info -->
+    {% if subscription and subscription.is_active_subscription %}
+    <div class="subscription-grid">
+        <div class="subscription-card">
+            <h2>Current Plan</h2>
+            <div class="subscription-info">
+                <div class="info-item">
+                    <div class="info-label">Plan Type</div>
+                    <div class="info-value">{{ subscription.package.name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Monthly Price</div>
+                    <div class="info-value">${{ subscription.package.price }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value" style="color: #27ae60;">Active</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Renews On</div>
+                    <div class="info-value">{{ subscription.expires_at|date:"F d, Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Days Remaining</div>
+                    <div class="info-value">{{ subscription.days_until_expiry }} days</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="subscription-card">
+            <h2>Active Features</h2>
+            <ul class="package-features" style="margin-top: 1rem;">
+                <li {% if not subscription.package.smart_matches_enabled %}class="disabled"{% endif %}>
+                    Smart AI Matching
+                </li>
+                <li {% if not subscription.package.anniversary_notifications %}class="disabled"{% endif %}>
+                    Anniversary Notifications
+                </li>
+                <li {% if not subscription.package.family_tree_advanced %}class="disabled"{% endif %}>
+                    Advanced Family Tree
+                </li>
+                <li>
+                    {{ subscription.package.storage_gb }} GB Storage
+                </li>
+                <li>
+                    Priority Email Support
+                </li>
+                <li>
+                    Ad-free Experience
+                </li>
+            </ul>
+            <form method="POST" action="{% url 'cancel_subscription' %}" style="margin-top: 2rem;">
+                {% csrf_token %}
+                <button type="submit" class="btn-cancel" onclick="return confirm('Are you sure? You\'ll keep access until your renewal date.')">
+                    Cancel Subscription
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Packages -->
+    <div class="packages-section">
+        <h2>All Available Plans</h2>
+        <div class="packages-grid">
+            {% for package in all_packages %}
+            <div class="package-card {% if subscription and subscription.package == package and subscription.is_active_subscription %}current{% elif package.tier == 'premium' %}featured{% endif %}">
+                {% if subscription and subscription.package == package and subscription.is_active_subscription %}
+                <div class="badge current">Your Current Plan</div>
+                {% elif package.tier == 'premium' %}
+                <div class="badge">Most Popular</div>
+                {% endif %}
+
+                <div class="package-name">{{ package.name }}</div>
+                {% if package.price > 0 %}
+                <div class="package-price">${{ package.price }}<span>/month</span></div>
+                {% else %}
+                <div class="package-price">Free</div>
+                {% endif %}
+
+                <p class="package-description">{{ package.description }}</p>
+
+                <ul class="package-features">
+                    <li {% if not package.smart_matches_enabled %}class="disabled"{% endif %}>
+                        Smart AI Matching
+                    </li>
+                    <li {% if not package.anniversary_notifications %}class="disabled"{% endif %}>
+                        Anniversary Notifications
+                    </li>
+                    <li {% if not package.family_tree_advanced %}class="disabled"{% endif %}>
+                        Advanced Family Tree
+                    </li>
+                    <li>
+                        {{ package.storage_gb }} GB Storage
+                    </li>
+                </ul>
+
+                {% if subscription and subscription.package == package and subscription.is_active_subscription %}
+                <button class="btn-manage" disabled>Current Plan</button>
+                {% elif package.tier == 'free' %}
+                <button class="btn-manage" disabled>Always Free</button>
+                {% else %}
+                <a href="{% url 'create_checkout' package.id %}" class="btn-upgrade">
+                    Upgrade Now
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    {% if transactions %}
+    <div class="transactions-section">
+        <h2>Payment History</h2>
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Transaction ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                    <td>${{ transaction.amount }}</td>
+                    <td>
+                        {% if transaction.status == 'completed' %}
+                        <span class="status-completed">✓ Completed</span>
+                        {% elif transaction.status == 'failed' %}
+                        <span class="status-failed">✗ Failed</span>
+                        {% else %}
+                        {{ transaction.status|title }}
+                        {% endif %}
+                    </td>
+                    <td style="font-family: monospace; font-size: 0.85rem;">
+                        {{ transaction.stripe_payment_intent_id|truncatechars:15 }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 12px;">
+        <h3 style="color: #2c3e50;">Need Help?</h3>
+        <p style="color: #6c757d;">Have questions about your subscription?</p>
+        <a href="mailto:support@memorialheritage.com" style="color: #667eea; text-decoration: none; font-weight: 600;">
+            Contact Support
+        </a>
+    </div>
+</div>
+{% endblock %}

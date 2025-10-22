@@ -50,6 +50,22 @@ from memorials.models import (
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY', 'sk_test_YOUR_SECRET_KEY_HERE')
 
 @login_required
+def subscription_dashboard(request):
+    """User's subscription dashboard"""
+    subscription = UserSubscription.objects.filter(user=request.user).first()
+    transactions = PaymentTransaction.objects.filter(user=request.user).order_by('-created_at')[:10]
+    all_packages = PremiumPackage.objects.filter(is_active=True)  # Add this line
+    
+    context = {
+        'subscription': subscription,
+        'transactions': transactions,
+        'all_packages': all_packages,  # Add this line
+    }
+    
+    return render(request, 'premium/my_subscription.html', context)
+
+
+@login_required
 def pricing_page(request):
     """Show pricing and package options"""
     packages = PremiumPackage.objects.filter(is_active=True)
@@ -125,18 +141,6 @@ def payment_success(request):
     return render(request, 'premium/success.html')
 
 
-@login_required
-def subscription_dashboard(request):
-    """User's subscription dashboard"""
-    subscription = UserSubscription.objects.filter(user=request.user).first()
-    transactions = PaymentTransaction.objects.filter(user=request.user).order_by('-created_at')[:10]
-    
-    context = {
-        'subscription': subscription,
-        'transactions': transactions,
-    }
-    
-    return render(request, 'premium/dashboard.html', context)
 
 
 @login_required

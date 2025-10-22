@@ -49,24 +49,78 @@ def stripe_webhook(request):
     return JsonResponse({'received': True})
 
 
+# def handle_checkout_completed(session):
+#     """Update subscription when checkout completes"""
+#     from memorials.models import UserSubscription, PremiumPackage, PaymentTransaction
+    
+#     user_id = session['metadata'].get('user_id')
+#     package_id = session['metadata'].get('package_id')
+
+#     print(f"DEBUG: user_id={user_id}, package_id={package_id}")
+#     print(f"DEBUG: Session metadata: {session['metadata']}")
+    
+#     if not user_id or not package_id:
+#         return
+    
+#     try:
+#         user = User.objects.get(id=user_id)
+#         package = PremiumPackage.objects.get(id=package_id)
+        
+#         # Get or create subscription
+#         subscription, created = UserSubscription.objects.get_or_create(user=user)
+        
+#         # Update subscription
+#         subscription.package = package
+#         subscription.status = 'active'
+#         subscription.stripe_customer_id = session['customer']
+#         subscription.stripe_subscription_id = session['subscription']
+#         subscription.started_at = timezone.now()
+#         subscription.expires_at = timezone.now() + timedelta(days=30)
+#         subscription.save()
+        
+#         # Create payment transaction
+#         PaymentTransaction.objects.create(
+#             user=user,
+#             subscription=subscription,
+#             amount=package.price,
+#             status='completed',
+#             stripe_payment_intent_id=session.get('payment_intent', ''),
+#             completed_at=timezone.now(),
+#         )
+        
+#     except Exception as e:
+#         print(f"Error handling checkout: {str(e)}")
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 def handle_checkout_completed(session):
-    """Update subscription when checkout completes"""
     from memorials.models import UserSubscription, PremiumPackage, PaymentTransaction
+    from django.contrib.auth.models import User
+    from django.utils import timezone
+    from datetime import timedelta
     
     user_id = session['metadata'].get('user_id')
     package_id = session['metadata'].get('package_id')
     
+    logger.info(f"Webhook received - user_id: {user_id}, package_id: {package_id}")
+    logger.info(f"Full metadata: {session['metadata']}")
+    
     if not user_id or not package_id:
+        logger.error("Missing user_id or package_id in metadata")
         return
     
     try:
         user = User.objects.get(id=user_id)
-        package = PremiumPackage.objects.get(id=package_id)
+        logger.info(f"User found: {user.username}")
         
-        # Get or create subscription
+        package = PremiumPackage.objects.get(id=package_id)
+        logger.info(f"Package found: {package.name}")
+        
         subscription, created = UserSubscription.objects.get_or_create(user=user)
         
-        # Update subscription
         subscription.package = package
         subscription.status = 'active'
         subscription.stripe_customer_id = session['customer']
@@ -75,7 +129,8 @@ def handle_checkout_completed(session):
         subscription.expires_at = timezone.now() + timedelta(days=30)
         subscription.save()
         
-        # Create payment transaction
+        logger.info(f"Subscription created/updated for {user.username}")
+        
         PaymentTransaction.objects.create(
             user=user,
             subscription=subscription,
@@ -85,8 +140,14 @@ def handle_checkout_completed(session):
             completed_at=timezone.now(),
         )
         
+        logger.info(f"Payment transaction recorded for {user.username}")
+        
+    except User.DoesNotExist:
+        logger.error(f"User not found: {user_id}")
+    except PremiumPackage.DoesNotExist:
+        logger.error(f"Package not found: {package_id}")
     except Exception as e:
-        print(f"Error handling checkout: {str(e)}")
+        logger.error(f"Error handling checkout: {str(e)}", exc_info=True)
 
 
 def handle_subscription_updated(subscription):
