@@ -136,7 +136,7 @@ def handle_checkout_completed(session):
             subscription=subscription,
             amount=package.price,
             status='completed',
-            stripe_payment_intent_id=session.get('payment_intent', ''),
+            stripe_payment_intent_id=session.get('payment_intent') or session.get('id', 'N/A'),
             completed_at=timezone.now(),
         )
         
