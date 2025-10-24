@@ -142,7 +142,6 @@ def payment_success(request):
 
 
 
-
 @login_required
 def cancel_subscription(request):
     """Cancel user's subscription"""
