@@ -7,7 +7,12 @@
 <head>
     
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Memorial Heritage - Honoring memories, preserving legacies">
     <title>{% block title %}Memorial Heritage{% endblock %}</title>
         <!-- Favicon using your logo -->
     <link rel="icon" type="image/png" href="{% static 'memohera_logo_180.png' %}">
@@ -45,12 +50,17 @@
         * {
             box-sizing: border-box;
         }
+        html {
+            scroll-behavior: smooth;
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--primary-color);
             background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Language-specific fonts */
@@ -80,6 +90,19 @@
         }
         {% endif %}
 
+        /* Global fix for long words without spaces */
+        * {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Specific elements that might have user-generated content */
+        p, h1, h2, h3, h4, h5, h6, span, div {
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+
         /* Header Styles */
         .site-header {
             background: white;
@@ -90,11 +113,23 @@
             z-index: 1000;
         }
 
+        .navbar {
+            padding: 0.75rem 0;
+        }
+
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
             color: var(--primary-color) !important;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
         }
 
         .navbar-nav .nav-link {
@@ -102,6 +137,10 @@
             font-weight: 500;
             padding: 0.75rem 1rem;
             transition: color 0.2s;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            
         }
 
         .navbar-nav .nav-link:hover {
@@ -117,8 +156,14 @@
         .btn {
             border-radius: var(--border-radius);
             font-weight: 500;
-            padding: 0.5rem 1.25rem;
+            padding: 0.75rem 1.25rem;
             transition: all 0.2s;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            touch-action: manipulation;
         }
 
         .btn-primary {
@@ -126,10 +171,12 @@
             border-color: var(--secondary-color);
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover,
+        .btn-primary:focus {
             background-color: #2980b9;
             border-color: #2980b9;
             transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .btn-outline-primary {
@@ -143,14 +190,18 @@
         }
 
         /* Form Styles */
-        .form-control {
+        .form-control,
+        .form-select {
             border-radius: var(--border-radius);
             border: 1px solid var(--border-color);
             padding: 0.75rem 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 16px;
+            min-height: 44px;
         }
 
-        .form-control:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--secondary-color);
             box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
         }
@@ -170,10 +221,15 @@
         /* Main Content */
         .main-content {
             min-height: calc(100vh - 200px);
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
         }
 
+        /* Container responsive padding */
+        .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
         /* Footer */
         .site-footer {
             background-color: var(--light-gray);
@@ -181,6 +237,17 @@
             padding: 2rem 0;
             margin-top: auto;
         }
+
+        .site-footer h5 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .site-footer p {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
         /* Notification Bell Badge */
         .notification-count-badge {
             position: absolute;
@@ -611,18 +678,6 @@
 </div>
 
 <style>
-
-/* Global fix for long words without spaces */
-* {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-/* Specific elements that might have user-generated content */
-p, h1, h2, h3, h4, h5, h6, span, div {
-    word-break: break-word;
-    hyphens: auto;
-}
 
 .cookie-consent {
     position: fixed;
