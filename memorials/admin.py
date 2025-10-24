@@ -2,10 +2,22 @@
 from django.contrib import admin
 from .models import Memorial
 from .models import Memorial, FamilyRelationship
+from memorials.models import PremiumPackage, UserSubscription, PaymentTransaction
 
+@admin.register(PremiumPackage)
+class PremiumPackageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'tier', 'price', 'is_active')
+    list_editable = ('is_active',)
+
+@admin.register(UserSubscription)
+class UserSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'package', 'status', 'expires_at')
+
+@admin.register(PaymentTransaction)
+class PaymentTransactionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'status', 'created_at')
 
 @admin.register(Memorial)
-# @admin.register(FamilyRelationship)
 class MemorialAdmin(admin.ModelAdmin):
     # What columns to show in the list view
     list_display = ['full_name', 'country', 'dob', 'dod', 'approved', 'created_at']
