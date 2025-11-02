@@ -15,9 +15,12 @@ from memorials.views import (
     mark_all_notifications_read, notification_settings, memorial_reminder_settings, upgrade_to_premium,
     smart_match_suggestions, accept_smart_match, dismiss_smart_match, archive_all_smart_matches,
     pricing_page, create_checkout_session, payment_success, subscription_dashboard,
-    cancel_subscription
+    cancel_subscription,memorial_photo_gallery,upload_memorial_photo,upload_multiple_memorial_photos,
+    delete_memorial_photo,update_memorial_photo,reorder_memorial_photos,get_memorial_photos_json
 )
+
 from memorials import webhook
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -77,6 +80,18 @@ urlpatterns += i18n_patterns(
     path('subscription/cancel/', cancel_subscription, name='cancel_subscription'),
 
     path('change-password/', change_password, name='change_password'),
+    
+    path('memorial/<int:memorial_id>/photos/', memorial_photo_gallery, name='memorial_photo_gallery'),
+    path('memorial/<int:memorial_id>/photo/upload/', upload_memorial_photo, name='upload_memorial_photo'),
+    path('memorial/<int:memorial_id>/photos/upload-multiple/', upload_multiple_memorial_photos, name='upload_multiple_photos'),
+    
+    # Photo management
+    path('photo/<int:photo_id>/delete/', delete_memorial_photo, name='delete_memorial_photo'),
+    path('photo/<int:photo_id>/update/', update_memorial_photo, name='update_memorial_photo'),
+    
+    # AJAX/API endpoints
+    path('memorial/<int:memorial_id>/photos/reorder/', reorder_memorial_photos, name='reorder_memorial_photos'),
+    path('api/memorial/<int:memorial_id>/photos/', get_memorial_photos_json, name='get_memorial_photos_json'),
     prefix_default_language=False,
 )
 
@@ -84,3 +99,4 @@ urlpatterns += i18n_patterns(
 urlpatterns += [
     path('webhook/stripe/', webhook.stripe_webhook, name='stripe_webhook'),
 ]
+

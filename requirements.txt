@@ -21,3 +21,4 @@ django-cloudinary-storage==0.3.0
 Faker==22.0.0
 stripe==5.4.0
 python-dotenv==1.0.0
+Pillow>=8.0

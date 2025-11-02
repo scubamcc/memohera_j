@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Upload Multiple Photos" %} - {{ memorial.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="display-5 mb-2">🖼️ {% trans "Upload Multiple Photos" %}</h1>
+                <p class="text-muted">
+                    {% trans "Add multiple photos to" %} <strong>{{ memorial.full_name }}'s</strong> {% trans "memorial" %}
+                </p>
+            </div>
+
+            <!-- Premium Badge -->
+            <div class="alert alert-success mb-4" role="alert">
+                <i class="bi bi-star-fill"></i>
+                <strong>{% trans "Premium Feature" %}</strong> - {% trans "Upload multiple photos at once" %}
+            </div>
+
+            <!-- Info Card -->
+            <div class="alert alert-info mb-4" role="alert">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle me-3 mt-1"></i>
+                    <div>
+                        <strong>{% trans "Photo Status:" %}</strong><br>
+                        📷 {% trans "Current:" %} <strong>{{ current_photos }}/{{ max_photos }}</strong> {% trans "photos" %}<br>
+                        <small class="text-muted">
+                            {% if can_add %}
+                                ✅ {% trans "You can add more photos" %}
+                            {% else %}
+                                ⚠️ {% trans "You have reached the maximum limit" %}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            {% if not can_add %}
+                <div class="alert alert-warning">
+                    <strong>{% trans "Limit Reached" %}</strong>
+                    <p class="mb-0">
+                        {% trans "You have reached the maximum number of photos for this memorial." %}
+                    </p>
+                </div>
+                <a href="{% url 'memorial_photo_gallery' memorial_id=memorial.id %}" class="btn btn-secondary">
+                    ← {% trans "Back to Gallery" %}
+                </a>
+            {% else %}
+                <!-- Form -->
+                <form method="post" enctype="multipart/form-data" id="multiPhotoForm" class="card shadow-sm">
+                    {% csrf_token %}
+                    <div class="card-body p-5">
+                        
+                        <!-- Drag & Drop Area -->
+                        <div class="border-2 border-dashed rounded-3 p-5 text-center mb-4" 
+                             id="dropZone"
+                             style="border: 2px dashed #dee2e6; cursor: pointer; transition: all 0.3s;">
+                            
+                            <i class="bi bi-cloud-arrow-up display-1 text-primary mb-3 d-block"></i>
+                            
+                            <h5 class="mb-2">{% trans "Drag and drop photos here" %}</h5>
+                            <p class="text-muted mb-3">{% trans "or click to select files" %}</p>
+                            
+                            <input type="file" 
+                                   id="photoInput"
+                                   name="photos"
+                                   accept="image/*"
+                                   multiple
+                                   style="display: none;">
+                            
+                            <button type="button" class="btn btn-primary" id="selectBtn">
+                                <i class="bi bi-folder-open"></i> {% trans "Select Photos" %}
+                            </button>
+                            
+                            <small class="text-muted d-block mt-3">
+                                ✓ {% trans "Formats: JPEG, PNG, GIF, WebP" %}<br>
+                                ✓ {% trans "Max 10MB per photo" %}
+                            </small>
+                        </div>
+
+                        <!-- File List Preview -->
+                        <div id="fileList" class="mb-4" style="display: none;">
+                            <h6 class="mb-3">{% trans "Selected Files:" %}</h6>
+                            <div id="fileListItems" class="list-group">
+                                <!-- Files will be listed here -->
+                            </div>
+                        </div>
+
+                        <!-- Selected Files Count -->
+                        <div id="fileCount" class="mb-4" style="display: none;">
+                            <div class="alert alert-light border">
+                                <strong id="countText"></strong>
+                            </div>
+                        </div>
+
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{% trans "Form Error:" %}</strong>
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if form.photos.errors %}
+                            <div class="alert alert-danger">
+                                {{ form.photos.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="card-footer bg-light p-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg flex-grow-1" id="submitBtn" disabled>
+                            <i class="bi bi-cloud-upload"></i> {% trans "Upload All Photos" %}
+                        </button>
+                        <a href="{% url 'memorial_photo_gallery' memorial_id=memorial.id %}" class="btn btn-outline-secondary btn-lg">
+                            {% trans "Cancel" %}
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Info Section -->
+                <div class="mt-5 p-4 bg-light rounded">
+                    <h6 class="mb-3">💡 {% trans "How to Use" %}</h6>
+                    <ul class="small text-muted list-unstyled">
+                        <li><strong>1.</strong> {% trans "Select multiple photos from your device" %}</li>
+                        <li><strong>2.</strong> {% trans "Photos will be shown in the preview area" %}</li>
+                        <li><strong>3.</strong> {% trans "Click Upload to add them all at once" %}</li>
+                        <li><strong>4.</strong> {% trans "Edit captions and set primary photo in the gallery" %}</li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const photoInput = document.getElementById('photoInput');
+    const selectBtn = document.getElementById('selectBtn');
+    const fileList = document.getElementById('fileList');
+    const fileListItems = document.getElementById('fileListItems');
+    const fileCount = document.getElementById('fileCount');
+    const countText = document.getElementById('countText');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('multiPhotoForm');
+
+    // Open file selector
+    selectBtn.addEventListener('click', () => photoInput.click());
+
+    // Drag over
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '#f8f9fa';
+        dropZone.style.borderColor = '#0d6efd';
+    });
+
+    // Drag leave
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.backgroundColor = '';
+        dropZone.style.borderColor = '#dee2e6';
+    });
+
+    // Drop files
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '';
+        dropZone.style.borderColor = '#dee2e6';
+        
+        const files = e.dataTransfer.files;
+        photoInput.files = files;
+        updateFileList();
+    });
+
+    // File input change
+    photoInput.addEventListener('change', updateFileList);
+
+    function updateFileList() {
+        const files = photoInput.files;
+        
+        if (files.length === 0) {
+            fileList.style.display = 'none';
+            fileCount.style.display = 'none';
+            submitBtn.disabled = true;
+            return;
+        }
+
+        fileListItems.innerHTML = '';
+        
+        Array.from(files).forEach((file, index) => {
+            const li = document.createElement('div');
+            li.className = 'list-group-item d-flex align-items-center justify-content-between';
+            
+            const fileName = file.name;
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            const isValid = file.size <= 10 * 1024 * 1024;
+            
+            li.innerHTML = `
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i class="bi bi-image me-3 text-primary"></i>
+                    <div class="flex-grow-1">
+                        <div class="small">${fileName}</div>
+                        <small class="text-muted">${fileSize} MB</small>
+                    </div>
+                </div>
+                <span class="badge ${isValid ? 'bg-success' : 'bg-danger'}">
+                    ${isValid ? '✓ OK' : '✗ Too large'}
+                </span>
+            `;
+            
+            fileListItems.appendChild(li);
+        });
+
+        fileList.style.display = 'block';
+        fileCount.style.display = 'block';
+        countText.textContent = `📷 ${files.length} {% trans "photo(s) selected" %}`;
+        submitBtn.disabled = false;
+    }
+</script>
+
+<style>
+    .border-2 {
+        border-width: 2px !important;
+    }
+    
+    #dropZone:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd;
+    }
+</style>
+{% endblock %}

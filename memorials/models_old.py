@@ -276,18 +276,34 @@ class Memorial(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['approved']),
-            models.Index(fields=['created_at']),
-            models.Index(fields=['full_name']),
-            models.Index(fields=['country']),
-            models.Index(fields=['approved', '-created_at']),  # Compound index
+        ordering = ['order', '-uploaded_at']
+        verbose_name = 'Memorial Photo'
+        verbose_name_plural = 'Memorial Photos'
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=['memorial', 'is_primary'],
+                condition=models.Q(is_primary=True),
+                name='unique_primary_photo_per_memorial'
+            )
         ]
 
     def __str__(self):
         return f"{self.full_name} (by {self.created_by.username})"
     
+        # Add this field if not already present:
+    primary_photo = models.OneToOneField(
+        MemorialPhoto,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='memorial_primary',
+        help_text='Primary photo displayed in listings'
+    )
+    
+
+    
+ 
     def get_primary_photo(self):
         '''Get the primary photo, or first uploaded if none marked as primary'''
         primary = self.photos.filter(is_primary=True).first()
@@ -525,3 +541,6 @@ class SmartMatchSuggestion(models.Model):
     
     def __str__(self):
         return f"Match: {self.my_memorial.full_name} ↔ {self.suggested_memorial.full_name} ({self.confidence_score}%)"
+
+
+

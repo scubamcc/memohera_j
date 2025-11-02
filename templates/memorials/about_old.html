@@ -1,0 +1,423 @@
+<!-- templates/home.html -->
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Memorial Heritage - Digital Memorials & Family Trees{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Color Palette */
+    :root {
+        --primary: #667eea;      /* Soft purple */
+        --secondary: #764ba2;    /* Deep purple */
+        --accent: #f093fb;       /* Light pink */
+        --light: #f8f9ff;        /* Very light blue */
+        --dark: #2c3e50;         /* Dark blue-gray */
+        --success: #27ae60;      /* Green */
+        --gold: #f39c12;         /* Gold */
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--light) 0%, #ffffff 100%);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 6rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(100px, -100px);
+    }
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(-50px, 100px);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .logo-display {
+        display: inline-block;
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .logo-display img {
+        width: 100px;
+        height: 100px;
+        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .hero-section p {
+        font-size: 1.3rem;
+        opacity: 0.95;
+        margin-bottom: 2rem;
+        line-height: 1.8;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-hero {
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary-hero {
+        background: white;
+        color: var(--secondary);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary-hero:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary-hero {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid white;
+    }
+
+    .btn-secondary-hero:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-3px);
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 6rem 2rem;
+        background: white;
+    }
+
+    .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+        text-align: center;
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 4rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background: linear-gradient(135deg, var(--light) 0%, #ffffff 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        border-color: var(--primary);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.3rem;
+        color: var(--dark);
+        margin-bottom: 1rem;
+    }
+
+    .feature-card p {
+        color: #6c757d;
+        line-height: 1.8;
+    }
+
+    /* Mission Section */
+    .mission-section {
+        background: linear-gradient(135deg, var(--light) 0%, #ffffff 100%);
+        padding: 6rem 2rem;
+    }
+
+    .mission-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .mission-box {
+        background: white;
+        padding: 3rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid var(--primary);
+    }
+
+    .mission-box h2 {
+        color: var(--dark);
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .mission-box p {
+        color: #555;
+        line-height: 1.9;
+        font-size: 1.05rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .cta-section h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 2.5rem;
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn-hero {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .logo-display img {
+            width: 80px;
+            height: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="logo-display">
+            <img src="{% static 'memohera_logo_180.png' %}" alt="Memorial Heritage Logo">
+        </div>
+        
+        <h1>Memorial Heritage</h1>
+        <p>Your digital sanctuary to remember and celebrate the lives of those who've passed on. Create beautiful tributes and keep their memory alive—forever.</p>
+        
+        <div class="hero-buttons">
+            {% if user.is_authenticated %}
+            <a href="{% url 'create_memorial' %}" class="btn-hero btn-primary-hero">
+                <i class="fas fa-plus me-2"></i>Create Memorial
+            </a>
+            <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
+                <i class="fas fa-search me-2"></i>Browse Memorials
+            </a>
+            {% else %}
+            <a href="{% url 'signup' %}" class="btn-hero btn-primary-hero">
+                <i class="fas fa-user-plus me-2"></i>Get Started
+            </a>
+            <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
+                <i class="fas fa-search me-2"></i>Browse
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="features-container">
+        <h2 class="section-title">Why Choose Memorial Heritage?</h2>
+        <p class="section-subtitle">Everything you need to honor and remember your loved ones</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>AI-Powered Matching</h3>
+                <p>Discover family connections automatically. Our smart algorithm finds relatives you might not know about.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🌳</div>
+                <h3>Interactive Family Trees</h3>
+                <p>Visualize your family history with beautiful, interactive family tree diagrams that tell your story.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📸</div>
+                <h3>Beautiful Tributes</h3>
+                <p>Create stunning memorial pages with photos, stories, and memories that celebrate their legacy.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Never Forget</h3>
+                <p>Get reminders for important dates and anniversaries so their memory is always honored.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                <h3>Share & Connect</h3>
+                <p>Invite family members to collaborate, share stories, and stay connected through their legacy.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Safe & Secure</h3>
+                <p>Your precious memories are protected with enterprise-grade encryption and privacy controls.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="mission-section">
+    <div class="mission-container">
+        <div class="mission-box">
+            <h2>Our Mission</h2>
+            <p>
+                We believe that every life has a story worth telling and remembering. Memorial Heritage provides a respectful, beautiful space where families can create lasting tributes to those they've lost, while connecting family histories and preserving legacies for future generations.
+            </p>
+            <p style="margin-top: 1.5rem;">
+                In a world where memories fade, we're here to help you keep theirs alive—forever.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h2>Start Creating Today</h2>
+        <p>Honor your loved ones with a beautiful memorial. It only takes a few minutes to get started.</p>
+        
+        {% if not user.is_authenticated %}
+        <a href="{% url 'signup' %}" class="btn-hero btn-primary-hero">
+            Create Your First Memorial
+        </a>
+        {% else %}
+        <a href="{% url 'create_memorial' %}" class="btn-hero btn-primary-hero">
+            Create A Memorial
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

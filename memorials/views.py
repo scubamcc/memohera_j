@@ -6,7 +6,8 @@ from django.utils.translation import gettext as _
 from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
-from .forms import MemorialForm, SuggestRelationshipForm
+from .forms import UserNotificationSettingsForm, MultipleMemorialPhotosForm, MemorialPhotoUpdateForm
+from .forms import MemorialForm, SuggestRelationshipForm,MemorialReminderSettingsForm,MemorialPhotoForm
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django_countries import countries
@@ -23,8 +24,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import get_object_or_404
 from .models import Memorial, FamilyRelationship, Notification, SmartMatchSuggestion
 from memorials.matching_algorithm import find_potential_matches
-from .forms import UserNotificationSettingsForm, MemorialReminderSettingsForm
-from .models import UserProfile, MemorialReminderSettings
+from .models import UserProfile, MemorialReminderSettings,Memorial, MemorialPhoto, UserSubscription
 from difflib import SequenceMatcher
 from django.db import models
 from django.views.decorators.http import require_http_methods
@@ -42,6 +42,259 @@ from memorials.models import (
     SmartMatchSuggestion,  # ADD THIS if not already there
     # ... your other imports
 )
+
+
+
+
+@login_required
+def memorial_photo_gallery(request, memorial_id):
+    """
+    Display photo gallery for a memorial
+    """
+    memorial = get_object_or_404(Memorial, id=memorial_id, approved=True)
+    photos = memorial.photos.all()
+    
+    # Check if user can edit (owns the memorial)
+    can_edit = memorial.created_by == request.user
+    
+    # Check subscription status
+    subscription = UserSubscription.objects.filter(
+        user=memorial.created_by,
+        status='active'
+    ).first()
+    is_premium = subscription is not None
+    
+    context = {
+        'memorial': memorial,
+        'photos': photos,
+        'can_edit': can_edit,
+        'is_premium': is_premium,
+        'photo_count': photos.count(),
+        'max_photos': memorial.get_max_photos(),
+    }
+    
+    return render(request, 'memorials/photo_gallery.html', context)
+
+
+@login_required
+def upload_memorial_photo(request, memorial_id):
+    """
+    Upload a single photo to a memorial
+    """
+    memorial = get_object_or_404(Memorial, id=memorial_id)
+    
+    # Check permission
+    if memorial.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this memorial.')
+        return redirect('memorial_detail', pk=memorial_id)
+    
+    # Check if user can add more photos
+    if not memorial.can_add_photo():
+        messages.error(
+            request,
+            f'You have reached the maximum number of photos ({memorial.get_max_photos()}) for this memorial.'
+        )
+        return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    
+    if request.method == 'POST':
+        form = MemorialPhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.memorial = memorial
+            photo.uploaded_by = request.user
+            photo.save()
+            
+            messages.success(request, 'Photo uploaded successfully!')
+            return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    else:
+        form = MemorialPhotoForm()
+    
+    context = {
+        'form': form,
+        'memorial': memorial,
+        'current_photos': memorial.get_photo_count(),
+        'max_photos': memorial.get_max_photos(),
+        'can_add': memorial.can_add_photo(),
+    }
+    
+    return render(request, 'memorials/upload_photo.html', context)
+
+
+@login_required
+def upload_multiple_memorial_photos(request, memorial_id):
+    """
+    Upload multiple photos at once
+    Premium feature - unlimited photos, Free users limited to 1
+    """
+    memorial = get_object_or_404(Memorial, id=memorial_id)
+    
+    # Check permission
+    if memorial.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this memorial.')
+        return redirect('memorial_detail', pk=memorial_id)
+    
+    # Check subscription for premium feature
+    subscription = UserSubscription.objects.filter(
+        user=request.user,
+        status='active'
+    ).first()
+    
+    if not subscription:
+        messages.warning(
+            request,
+            'Multiple photo upload is a premium feature. Upgrade your account to upload more photos.'
+        )
+        return redirect('upgrade_to_premium')
+    
+    if request.method == 'POST':
+        form = MultipleMemorialPhotosForm(request.POST, request.FILES)
+        if form.is_valid():
+            photos = request.FILES.getlist('photos')
+            uploaded_count = 0
+            skipped_count = 0
+            
+            for idx, photo_file in enumerate(photos):
+                # Check if we can add more photos
+                if not memorial.can_add_photo():
+                    skipped_count += 1
+                    continue
+                
+                # Create photo object
+                photo = MemorialPhoto(
+                    memorial=memorial,
+                    photo=photo_file,
+                    uploaded_by=request.user,
+                    order=idx,
+                )
+                photo.save()
+                uploaded_count += 1
+            
+            if uploaded_count > 0:
+                messages.success(request, f'{uploaded_count} photo(s) uploaded successfully!')
+            
+            if skipped_count > 0:
+                messages.warning(
+                    request,
+                    f'{skipped_count} photo(s) could not be uploaded (reached maximum limit).'
+                )
+            
+            return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    else:
+        form = MultipleMemorialPhotosForm()
+    
+    context = {
+        'form': form,
+        'memorial': memorial,
+        'current_photos': memorial.get_photo_count(),
+        'max_photos': memorial.get_max_photos(),
+        'can_add': memorial.can_add_photo(),
+        'is_premium': True,
+    }
+    
+    return render(request, 'memorials/upload_multiple_photos.html', context)
+
+
+@login_required
+def delete_memorial_photo(request, photo_id):
+    """
+    Delete a memorial photo
+    """
+    photo = get_object_or_404(MemorialPhoto, id=photo_id)
+    memorial_id = photo.memorial.id
+    
+    # Check permission
+    if photo.memorial.created_by != request.user:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        messages.error(request, 'You do not have permission to delete this photo.')
+        return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    
+    photo.delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Photo deleted successfully'})
+    
+    messages.success(request, 'Photo deleted successfully.')
+    return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+
+
+@login_required
+def update_memorial_photo(request, photo_id):
+    """
+    Update photo details (caption, alt text, primary status, order)
+    """
+    photo = get_object_or_404(MemorialPhoto, id=photo_id)
+    memorial_id = photo.memorial.id
+    
+    # Check permission
+    if photo.memorial.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this photo.')
+        return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    
+    if request.method == 'POST':
+        form = MemorialPhotoUpdateForm(request.POST, instance=photo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Photo updated successfully!')
+            return redirect('memorial_photo_gallery', memorial_id=memorial_id)
+    else:
+        form = MemorialPhotoUpdateForm(instance=photo)
+    
+    context = {
+        'form': form,
+        'photo': photo,
+        'memorial': photo.memorial,
+    }
+    
+    return render(request, 'memorials/edit_photo.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def reorder_memorial_photos(request, memorial_id):
+    """
+    AJAX endpoint to reorder photos via drag and drop
+    """
+    memorial = get_object_or_404(Memorial, id=memorial_id)
+    
+    # Check permission
+    if memorial.created_by != request.user:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    try:
+        order_data = request.POST.getlist('photo_ids[]')
+        
+        for idx, photo_id in enumerate(order_data):
+            photo = MemorialPhoto.objects.get(id=photo_id, memorial=memorial)
+            photo.order = idx
+            photo.save()
+        
+        return JsonResponse({'success': True, 'message': 'Photos reordered successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+def get_memorial_photos_json(request, memorial_id):
+    """
+    Get all photos for a memorial as JSON
+    Useful for lightbox/carousel JavaScript libraries
+    """
+    memorial = get_object_or_404(Memorial, id=memorial_id, approved=True)
+    photos = memorial.photos.all().values('id', 'photo', 'caption', 'alt_text')
+    
+    return JsonResponse({
+        'memorial_id': memorial_id,
+        'memorial_name': memorial.full_name,
+        'photos': list(photos),
+        'count': photos.count(),
+    })
+
+
+
+
+
+
+
 
 
 

@@ -546,17 +546,13 @@
                 {% for m in memorials %}
                     <div class="memorial-item-list" onclick="openMemorialModal({{ m.id }})">
                         <div class="memorial-thumbnail">
-                            {% with primary_photo=m.photos.first %}
-                                {% if primary_photo %}
-                                    <img src="{{ primary_photo.photo.url }}" alt="{{ m.full_name }}">
-                                {% elif m.image_url %}
-                                    <img src="{{ m.image_url.url }}" alt="{{ m.full_name }}">
-                                {% else %}
-                                    <div class="memorial-thumbnail-placeholder">
-                                        <i class="fas fa-user-circle fa-2x"></i>
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
+                            {% if m.image_url %}
+                                <img src="{{ m.image_url.url }}" alt="{{ m.full_name }}">
+                            {% else %}
+                                <div class="memorial-thumbnail-placeholder">
+                                    <i class="fas fa-user-circle fa-2x"></i>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="memorial-content">
                             <div class="memorial-name">{{ m.full_name }}</div>
@@ -592,18 +588,14 @@
                 {% for m in memorials %}
                     <div class="memorial-item-gallery" onclick="openMemorialModal({{ m.id }})">
                         <div class="memorial-gallery-image">
-                            {% with primary_photo=m.photos.first %}
-                                {% if primary_photo %}
-                                    <img src="{{ primary_photo.photo.url }}" alt="{{ m.full_name }}">
-                                {% elif m.image_url %}
-                                    <img src="{{ m.image_url.url }}" alt="{{ m.full_name }}">
-                                {% else %}
-                                    <div class="memorial-gallery-placeholder">
-                                        <i class="fas fa-user-circle fa-3x"></i>
-                                        <small class="mt-2">No Photo</small>
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
+                            {% if m.image_url %}
+                                <img src="{{ m.image_url.url }}" alt="{{ m.full_name }}">
+                            {% else %}
+                                <div class="memorial-gallery-placeholder">
+                                    <i class="fas fa-user-circle fa-3x"></i>
+                                    <small class="mt-2">No Photo</small>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="memorial-gallery-content">
                             <div class="memorial-gallery-name">{{ m.full_name }}</div>
@@ -720,8 +712,6 @@ document.addEventListener('DOMContentLoaded', function() {
             "dod": "{{ m.dod|date:'F j, Y'|escapejs }}",
             "story": "{{ m.story|escapejs }}",
             "image": {% if m.image_url %}"{{ m.image_url.url|escapejs }}"{% else %}null{% endif %},
-            "primaryPhoto": {% with primary_photo=m.photos.first %}{% if primary_photo %}"{{ primary_photo.photo.url }}"{% else %}null{% endif %}{% endwith %},
-            "photo_count": {{ m.photos.count }},
             "created_date": "{{ m.created_at|date:'F j, Y'|escapejs }}",
             "relationships": [
                 {% if m.relationships %}
@@ -870,24 +860,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </a>`
                 : '';
             
-            // Determine photo gallery button state
-            const user_is_premium = {{ user.is_authenticated|lower }} && {{ user.userprofile.is_premium|lower }};
-            const photoGalleryButton = user_is_premium
-                ? `<a href="/memorial/${memorial.id}/photos/" class="btn btn-outline-secondary btn-sm" style="text-decoration: none; cursor: pointer;">
-                    <i class="fas fa-images me-1"></i>Photo Gallery ${memorial.photo_count > 0 ? `(${memorial.photo_count})` : ''}
-                </a>`
-                : `<button class="btn btn-outline-secondary btn-sm" onclick="showUpgradeModal()" style="position: relative;">
-                    <i class="fas fa-images me-1"></i>Photo Gallery ${memorial.photo_count > 0 ? `(${memorial.photo_count})` : ''}
-                    <span style="position: absolute; top: -5px; right: -5px; background: #ffc107; color: #000; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">⭐</span>
-                </button>`;
-            
             actionButtonsHtml = `
                 <div style="border-top: 1px solid #dee2e6; padding-top: 1.5rem; margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                     <a href="/memorial/${memorial.id}/suggest-relationship/" class="btn btn-outline-info btn-sm" style="text-decoration: none;">
                         <i class="fas fa-link me-1"></i>Suggest Connection
                     </a>
                     ${familyTreeButton}
-                    ${photoGalleryButton}
                     <button class="btn btn-outline-primary btn-sm" onclick="shareMemorial(${memorial.id})">
                         <i class="fab fa-facebook-square me-1"></i>Share
                     </button>
@@ -895,15 +873,12 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         {% endif %}
         
-        // Display primary photo first, then fall back to main image
-        const displayImage = memorial.primaryPhoto || memorial.image;
-        
         // Build modal content
         modalContent.innerHTML = `
             <div class="row">
                 <div class="col-md-4 text-center mb-4">
-                    ${displayImage ? 
-                        `<img src="${displayImage}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
+                    ${memorial.image ? 
+                        `<img src="${memorial.image}" alt="${memorial.name}" style="width: 100%; max-width: 300px; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">` :
                         `<div style="width: 100%; max-width: 300px; height: 300px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c757d; margin: 0 auto;">
                             <i class="fas fa-user-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
                             <span>No Photo</span>
@@ -970,10 +945,5 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleAdvancedSearch();
     }
 });
-
-function showUpgradeModal() {
-    alert('🌟 Premium Feature!\n\nUpgrade to Premium to view the full photo gallery and more exclusive features!');
-}
 </script>
-
 {% endblock %}

@@ -4,6 +4,199 @@ from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
 from .models import Memorial, FamilyRelationship, UserProfile, MemorialReminderSettings, RELATIONSHIP_CHOICES
 import datetime
+from django.forms import modelformset_factory, inlineformset_factory
+from .models import MemorialPhoto, Memorial
+from django.core.exceptions import ValidationError
+from PIL import Image
+from io import BytesIO
+
+
+class MemorialPhotoForm(forms.ModelForm):
+    """
+    Form for uploading a single memorial photo
+    """
+    class Meta:
+        model = MemorialPhoto
+        fields = ['photo', 'caption', 'alt_text', 'is_primary']
+        widgets = {
+            'photo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+                'data-max-file-size': '10485760',  # 10MB in bytes
+            }),
+            'caption': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Add a caption for this photo (optional)',
+                'maxlength': '500',
+            }),
+            'alt_text': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Describe the image for accessibility (optional)',
+                'maxlength': '200',
+            }),
+            'is_primary': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+        }
+        labels = {
+            'photo': 'Photo',
+            'caption': 'Photo Caption',
+            'alt_text': 'Alternative Text (for accessibility)',
+            'is_primary': 'Set as primary memorial photo',
+        }
+    
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        
+        if photo:
+            # Check file size (max 10MB)
+            if photo.size > 10 * 1024 * 1024:
+                raise ValidationError('Photo size must not exceed 10MB')
+            
+            # Check file type
+            allowed_formats = ['JPEG', 'JPG', 'PNG', 'GIF', 'WEBP']
+            try:
+                img = Image.open(photo)
+                if img.format and img.format.upper() not in allowed_formats:
+                    raise ValidationError(f'File format must be one of: {", ".join(allowed_formats)}')
+            except Exception as e:
+                raise ValidationError('Invalid image file')
+        
+        return photo
+
+
+class MultipleMemorialPhotosForm(forms.Form):
+    """
+    Form for uploading multiple photos at once
+    """
+    photos = forms.FileField(
+        label='Select Photos',
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*',
+        }),
+        help_text='Select one or more images. Max 10MB each, formats: JPEG, PNG, GIF, WebP'
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add multiple attribute to the widget after initialization
+        self.fields['photos'].widget.attrs['multiple'] = True
+    
+    def clean_photos(self):
+        photos = self.files.getlist('photos')
+        
+        if not photos:
+            raise ValidationError('Please select at least one photo')
+        
+        allowed_formats = ['JPEG', 'JPG', 'PNG', 'GIF', 'WEBP']
+        
+        for photo in photos:
+            # Check file size
+            if photo.size > 10 * 1024 * 1024:
+                raise ValidationError(f'File "{photo.name}" exceeds 10MB limit')
+            
+            # Check file type
+            try:
+                img = Image.open(photo)
+                if img.format and img.format.upper() not in allowed_formats:
+                    raise ValidationError(
+                        f'File "{photo.name}" has unsupported format. '
+                        f'Allowed: {", ".join(allowed_formats)}'
+                    )
+            except ValidationError:
+                raise
+            except Exception:
+                raise ValidationError(f'File "{photo.name}" is not a valid image')
+        
+        return photos
+
+
+# Formset for managing multiple photos
+MemorialPhotoFormSet = inlineformset_factory(
+    Memorial,
+    MemorialPhoto,
+    form=MemorialPhotoForm,
+    extra=3,  # Show 3 empty forms for new photos
+    max_num=100,  # Max 100 photos per memorial
+    can_delete=True,
+)
+
+
+class MemorialPhotoUpdateForm(forms.ModelForm):
+    """
+    Form for updating photo details (caption, alt text, primary status)
+    """
+    class Meta:
+        model = MemorialPhoto
+        fields = ['caption', 'alt_text', 'is_primary', 'order']
+        widgets = {
+            'caption': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'maxlength': '500',
+            }),
+            'alt_text': forms.TextInput(attrs={
+                'class': 'form-control',
+                'maxlength': '200',
+            }),
+            'is_primary': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+            }),
+        }
+
+
+class MemorialEditWithPhotosForm(forms.ModelForm):
+    """
+    Extended memorial form that includes photo management
+    Use this when editing a memorial with photo gallery
+    """
+    class Meta:
+        model = Memorial
+        fields = [
+            'full_name', 'dob', 'dod', 'story', 'country'
+        ]
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Full name'
+            }),
+            'dob': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'placeholder': 'Date of Birth'
+            }),
+            'dod': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'placeholder': 'Date of Death'
+            }),
+            'story': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Share their story...'
+            }),
+            'country': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+        }
+
+
+
+
+
+
+
+
+
+
+
+##################################################################
 
 
 class MemorialForm(forms.ModelForm):

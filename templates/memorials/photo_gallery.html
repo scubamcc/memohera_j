@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Photo Gallery - {{ memorial.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Photo Gallery Styles */
+    .photo-gallery {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .gallery-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .gallery-header h2 {
+        margin: 0;
+    }
+
+    .gallery-stats {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .photo-count {
+        background: #e3f2fd;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #1976d2;
+    }
+
+    .gallery-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* Main Gallery Grid */
+    .photos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .photo-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .photo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .photo-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 1;
+        background: #f0f0f0;
+    }
+
+    .photo-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .photo-card:hover .photo-image-wrapper img {
+        transform: scale(1.05);
+    }
+
+    .photo-primary-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #4caf50;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .photo-card:hover .photo-overlay {
+        opacity: 1;
+    }
+
+    .photo-overlay button,
+    .photo-overlay a {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .photo-delete-btn {
+        background: #f44336;
+        color: white;
+    }
+
+    .photo-delete-btn:hover {
+        background: #d32f2f;
+    }
+
+    .photo-edit-btn {
+        background: #2196f3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .photo-edit-btn:hover {
+        background: #1976d2;
+    }
+
+    .photo-info {
+        padding: 1rem;
+    }
+
+    .photo-caption {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .photo-date {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .photo-alt-text {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    /* Empty State */
+    .empty-gallery {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: #f5f5f5;
+        border-radius: 8px;
+        border-dashed: 2px solid #ddd;
+    }
+
+    .empty-gallery i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+
+    .empty-gallery h3 {
+        color: #999;
+        margin-bottom: 1rem;
+    }
+
+    /* Premium Badge */
+    .premium-feature {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .photos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .gallery-actions {
+            width: 100%;
+        }
+
+        .gallery-actions .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .photo-info {
+            padding: 0.75rem;
+        }
+
+        .photo-caption {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .photos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .photo-overlay button,
+        .photo-overlay a {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Drag and drop styles */
+    .sortable-photo {
+        cursor: move;
+    }
+
+    .sortable-photo.dragging {
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="photo-gallery">
+        <!-- Gallery Header -->
+        <div class="gallery-header">
+            <div>
+                <h2>
+                    <i class="fas fa-images me-2"></i>Photo Gallery
+                </h2>
+                <p class="text-muted mb-0">{{ memorial.full_name }}</p>
+            </div>
+            
+            <div class="gallery-stats">
+                <div class="photo-count">
+                    <i class="fas fa-image me-1"></i>
+                    {{ photo_count }} / {{ max_photos }}
+                </div>
+                
+                {% if is_premium %}
+                    <span class="premium-feature">
+                        <i class="fas fa-star"></i> Premium
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Gallery Actions (for memorial owner) -->
+        {% if can_edit %}
+            <div class="gallery-actions mb-3">
+                <a href="{% url 'upload_memorial_photo' memorial_id=memorial.id %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Photo
+                </a>
+                
+                {% if is_premium %}
+                    <a href="{% url 'upload_multiple_photos' memorial_id=memorial.id %}" class="btn btn-success">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Bulk Upload
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Photo Grid -->
+        {% if photos %}
+            <div class="photos-grid" id="photosGrid">
+                {% for photo in photos %}
+                    <div class="photo-card sortable-photo" data-photo-id="{{ photo.id }}">
+                        <div class="photo-image-wrapper">
+                            <img src="{{ photo.photo.url }}" 
+                                 alt="{{ photo.alt_text|default:photo.caption|default:memorial.full_name }}"
+                                 class="photo-image">
+                            
+                            {% if photo.is_primary %}
+                                <span class="photo-primary-badge">
+                                    <i class="fas fa-star"></i> Primary
+                                </span>
+                            {% endif %}
+                            
+                            {% if can_edit %}
+                                <div class="photo-overlay">
+                                    <a href="{% url 'update_memorial_photo' photo.id %}" 
+                                       class="photo-edit-btn"
+                                       title="Edit photo details">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <button class="photo-delete-btn" 
+                                            onclick="deletePhoto({{ photo.id }})"
+                                            title="Delete this photo">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="photo-info">
+                            {% if photo.caption %}
+                                <div class="photo-caption">{{ photo.caption }}</div>
+                            {% endif %}
+                            
+                            {% if photo.alt_text %}
+                                <div class="photo-alt-text">
+                                    <small>{{ photo.alt_text }}</small>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="photo-date">
+                                <small>{{ photo.uploaded_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-gallery">
+                <i class="fas fa-image"></i>
+                <h3>No photos yet</h3>
+                <p class="text-muted mb-3">
+                    Start honoring this person by adding photos to their memorial.
+                </p>
+                {% if can_edit %}
+                    <a href="{% url 'upload_memorial_photo' memorial_id=memorial.id %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add First Photo
+                    </a>
+                {% else %}
+                    <p class="text-muted small">Photos will appear here once added by the memorial creator.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Info Message for Free Users -->
+        {% if can_edit and not is_premium and photo_count >= max_photos %}
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Upgrade to Premium!</strong>
+                You've reached the photo limit for free accounts. 
+                <a href="{% url 'upgrade_to_premium' %}" class="alert-link">Upgrade now</a>
+                to upload unlimited photos.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function deletePhoto(photoId) {
+        if (confirm('Are you sure you want to delete this photo?')) {
+            fetch(`/photo/${photoId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[data-photo-id="${photoId}"]`).remove();
+                    location.reload(); // Reload to update photo count
+                } else {
+                    alert('Error deleting photo: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting photo');
+            });
+        }
+    }
+
+    // Sortable/drag functionality (optional - requires SortableJS)
+    // Uncomment if you want to use drag-and-drop reordering
+    /*
+    const grid = document.getElementById('photosGrid');
+    if (grid) {
+        new Sortable(grid, {
+            animation: 150,
+            ghostClass: 'dragging',
+            onEnd: function() {
+                const photoIds = Array.from(grid.querySelectorAll('.sortable-photo'))
+                    .map(el => el.dataset.photoId);
+                
+                fetch('{% url "reorder_memorial_photos" memorial_id=memorial.id %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'photo_ids[]': photoIds
+                    })
+                });
+            }
+        });
+    }
+    */
+</script>
+{% endblock %}
