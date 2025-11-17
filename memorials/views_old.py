@@ -1198,10 +1198,7 @@ def get_memorial_relationships(memorial):
         relationships.append({
             'type': rel.get_relationship_type_display(),
             'memorial': rel.person_b,
-            'relationship_obj': rel,
-            'dob': rel.person_b.dob.strftime('%B %d, %Y') if rel.person_b.dob else None,  # ADD DOB HERE
-            'dob': rel.person_b.dob.strftime('%B %d, %Y') if rel.person_b.dob else '',
-            'dob_display': rel.person_b.dob.strftime('%Y-%m-%d') if rel.person_b.dob else None,
+            'relationship_obj': rel
         })
     
     # Get relationships where this memorial is person_b (reverse the relationship)
@@ -1220,15 +1217,26 @@ def get_memorial_relationships(memorial):
     for rel in memorial.family_relationships_to.filter(status='approved'):
         reverse_type = reverse_map.get(rel.relationship_type, rel.relationship_type)
         relationships.append({
+            'type': rel.get_relationship_type_display(),
+            'memorial': rel.person_b,
+            'relationship_obj': rel,
+            'verification_status': rel.verification_status,
+            'verification_badge': get_verification_badge(rel.verification_status),
+            'suggested_by': rel.suggested_by,
+        })
+
+    # Get relationships where this memorial is person_b (reverse the relationship)
+    for rel in memorial.family_relationships_to.filter(status='approved'):
+        reverse_type = reverse_map.get(rel.relationship_type, rel.relationship_type.replace('_', '/').title())
+        relationships.append({
             'type': reverse_type,
             'memorial': rel.person_a,
             'relationship_obj': rel,
             'verification_status': rel.verification_status,
             'verification_badge': get_verification_badge(rel.verification_status),
             'suggested_by': rel.suggested_by,
-            'dob': rel.person_a.dob.strftime('%B %d, %Y') if rel.person_a.dob else None,  # ADD DOB HERE
-            'dob_display': rel.person_a.dob.strftime('%Y-%m-%d') if rel.person_a.dob else None,
         })
+
 
     return relationships
 
@@ -1524,3 +1532,4 @@ def mark_all_notifications_read(request):
     )
     messages.success(request, 'All notifications marked as read.')
     return redirect('notifications_list')
+

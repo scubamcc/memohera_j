@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load static %}
 
-{% block title %}Memorial Heritage - Digital Memorials & Family Trees{% endblock %}
+{% block title %}{% trans "Memorial Heritage - Digital Memorials & Family Trees" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -249,14 +250,14 @@
     }
 
     .feature-card h3 {
-        font-size: 1.3rem;
         color: var(--dark);
         margin-bottom: 1rem;
+        font-size: 1.3rem;
     }
 
     .feature-card p {
         color: #6c757d;
-        line-height: 1.8;
+        line-height: 1.7;
     }
 
     /* How It Works Section */
@@ -266,7 +267,7 @@
     }
 
     .how-it-works-container {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
@@ -274,38 +275,46 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 2rem;
-        margin-top: 3rem;
+        margin-bottom: 3rem;
     }
 
     .step-card {
+        background: linear-gradient(135deg, var(--light) 0%, #ffffff 100%);
+        padding: 2.5rem;
+        border-radius: 15px;
+        border: 1px solid #e5e7eb;
         text-align: center;
-        padding: 2rem;
-        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .step-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.1);
     }
 
     .step-number {
         width: 60px;
         height: 60px;
+        margin: 0 auto 1.5rem;
         background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        color: white;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        margin: 0 auto 1rem;
+        color: white;
     }
 
     .step-card h3 {
         color: var(--dark);
+        margin-bottom: 1rem;
         font-size: 1.2rem;
-        margin-bottom: 0.5rem;
     }
 
     .step-card p {
         color: #6c757d;
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     /* Testimonials Section */
@@ -315,7 +324,7 @@
     }
 
     .testimonials-container {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
@@ -323,35 +332,41 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
-        margin-top: 3rem;
     }
 
     .testimonial-card {
         background: white;
-        padding: 2rem;
+        padding: 2.5rem;
         border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        border-left: 5px solid var(--primary);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-top: 4px solid var(--primary);
+        transition: all 0.3s ease;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.15);
     }
 
     .testimonial-text {
         color: #555;
         font-size: 1rem;
         line-height: 1.8;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         font-style: italic;
     }
 
     .testimonial-author {
         color: var(--secondary);
         font-weight: 600;
+        margin: 0;
     }
 
     /* CTA Section */
     .cta-section {
+        padding: 6rem 2rem;
         background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
         color: white;
-        padding: 6rem 2rem;
         text-align: center;
     }
 
@@ -361,13 +376,14 @@
     }
 
     .cta-section h2 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+        font-size: 2.8rem;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
     }
 
     .cta-section p {
         font-size: 1.2rem;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
         opacity: 0.95;
         line-height: 1.8;
     }
@@ -379,38 +395,15 @@
         flex-wrap: wrap;
     }
 
-    /* Stats Section */
-    .stats-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        padding: 2rem 0;
-    }
-
-    .stat-item {
-        text-align: center;
-    }
-
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: white;
-    }
-
-    .stat-label {
-        font-size: 1rem;
-        opacity: 0.9;
-    }
-
     /* Responsive */
     @media (max-width: 768px) {
         .hero-section {
+            padding: 4rem 1rem;
             min-height: auto;
-            padding: 4rem 2rem;
         }
 
         .hero-section h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
         }
 
         .hero-section > .hero-content > p:first-of-type {
@@ -451,32 +444,27 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-content">
-        <!-- <div class="logo-display">
-            <img src="{% static 'memohera_logo_1024.png' %}" alt="Memorial Heritage Logo">
-        </div> -->
-
         <div class="logo-display" style="background: transparent; padding: 0; box-shadow: none;">
             <img src="{% static 'memohera_logo_180.png' %}" alt="Memorial Heritage Logo" style="filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));">
         </div>
 
-        
-        <h1>Create a Lasting Digital Memorial for Your Loved Ones</h1>
-        <p>Memorial Heritage is your online sanctuary to remember, honor, and celebrate the lives of those who've passed — with beautiful, personalized tribute pages that keep their memory alive forever.</p>
-        
+        <h1>{% trans "Create a Lasting Digital Memorial for Your Loved Ones" %}</h1>
+        <p>{% trans "Memorial Heritage is your online sanctuary to remember, honor, and celebrate the lives of those who've passed — with beautiful, personalized tribute pages that keep their memory alive forever." %}</p>
+
         <div class="hero-buttons">
             {% if user.is_authenticated %}
             <a href="{% url 'create_memorial' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-plus me-2"></i>Create a Tribute Page
+                <i class="fas fa-plus me-2"></i>{% trans "Create a Tribute Page" %}
             </a>
             <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
-                <i class="fas fa-search me-2"></i>Explore Memorials
+                <i class="fas fa-search me-2"></i>{% trans "Explore Memorials" %}
             </a>
             {% else %}
             <a href="{% url 'signup' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-user-plus me-2"></i>Create a Tribute Page
+                <i class="fas fa-user-plus me-2"></i>{% trans "Create a Tribute Page" %}
             </a>
             <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
-                <i class="fas fa-search me-2"></i>Explore Memorials
+                <i class="fas fa-search me-2"></i>{% trans "Explore Memorials" %}
             </a>
             {% endif %}
         </div>
@@ -487,12 +475,12 @@
 <section class="what-is-section">
     <div class="what-is-container">
         <div class="what-is-box">
-            <h2>What Is Memorial Heritage?</h2>
+            <h2>{% trans "What Is Memorial Heritage?" %}</h2>
             <p>
-                Memorial Heritage is a digital memorial platform where families and friends can create lasting online tributes for their loved ones. Upload photos, share stories, write heartfelt messages, and build a living space of memories that honors their life and legacy.
+                {% trans "Memorial Heritage is a digital memorial platform where families and friends can create lasting online tributes for their loved ones. Upload photos, share stories, write heartfelt messages, and build a living space of memories that honors their life and legacy." %}
             </p>
             <p>
-                Each memorial page becomes a beautiful digital tribute, accessible anytime — so that love and remembrance never fade away.
+                {% trans "Each memorial page becomes a beautiful digital tribute, accessible anytime — so that love and remembrance never fade away." %}
             </p>
         </div>
     </div>
@@ -501,55 +489,55 @@
 <!-- Why Choose Section -->
 <section class="features-section">
     <div class="features-container">
-        <h2 class="section-title">Why Choose Memorial Heritage</h2>
-        
+        <h2 class="section-title">{% trans "Why Choose Memorial Heritage" %}</h2>
+
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-palette"></i>
                 </div>
-                <h3>Beautiful & Personalized Pages</h3>
-                <p>Design unique memorial pages with photos, music, quotes, and more — a reflection of the person's life and story.</p>
+                <h3>{% trans "Beautiful & Personalized Pages" %}</h3>
+                <p>{% trans "Design unique memorial pages with photos, music, quotes, and more — a reflection of the person's life and story." %}</p>
             </div>
-            
+
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <h3>Share Memories with Family & Friends</h3>
-                <p>Invite others to contribute messages, images, and thoughts — creating a collective tribute that grows over time.</p>
+                <h3>{% trans "Share Memories with Family & Friends" %}</h3>
+                <p>{% trans "Invite others to contribute messages, images, and thoughts — creating a collective tribute that grows over time." %}</p>
             </div>
-            
+
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-lock"></i>
                 </div>
-                <h3>Safe, Private, and Everlasting</h3>
-                <p>Your memories are securely stored and preserved forever, in a private digital sanctuary accessible only to those you choose.</p>
+                <h3>{% trans "Safe, Private, and Everlasting" %}</h3>
+                <p>{% trans "Your memories are securely stored and preserved forever, in a private digital sanctuary accessible only to those you choose." %}</p>
             </div>
-            
+
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-sitemap"></i>
                 </div>
-                <h3>Interactive Family Trees</h3>
-                <p>Visualize your family history with beautiful, interactive family tree diagrams that tell your story.</p>
+                <h3>{% trans "Interactive Family Trees" %}</h3>
+                <p>{% trans "Visualize your family history with beautiful, interactive family tree diagrams that tell your story." %}</p>
             </div>
-            
+
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-bell"></i>
                 </div>
-                <h3>Never Forget</h3>
-                <p>Get reminders for important dates and anniversaries so their memory is always honored.</p>
+                <h3>{% trans "Never Forget" %}</h3>
+                <p>{% trans "Get reminders for important dates and anniversaries so their memory is always honored." %}</p>
             </div>
-            
+
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-globe"></i>
                 </div>
-                <h3>Share Worldwide</h3>
-                <p>Share memorials with family and friends around the world with a simple link.</p>
+                <h3>{% trans "Share Worldwide" %}</h3>
+                <p>{% trans "Share memorials with family and friends around the world with a simple link." %}</p>
             </div>
         </div>
     </div>
@@ -558,37 +546,37 @@
 <!-- How It Works Section -->
 <section class="how-it-works-section">
     <div class="how-it-works-container">
-        <h2 class="section-title">How It Works</h2>
-        <p class="section-subtitle">Three simple steps to create a lasting tribute</p>
-        
+        <h2 class="section-title">{% trans "How It Works" %}</h2>
+        <p class="section-subtitle">{% trans "Three simple steps to create a lasting tribute" %}</p>
+
         <div class="steps-grid">
             <div class="step-card">
                 <div class="step-number">1</div>
-                <h3>Create your memorial page in minutes</h3>
-                <p>Set up a beautiful tribute page with basic information and photos of your loved one.</p>
+                <h3>{% trans "Create your memorial page in minutes" %}</h3>
+                <p>{% trans "Set up a beautiful tribute page with basic information and photos of your loved one." %}</p>
             </div>
-            
+
             <div class="step-card">
                 <div class="step-number">2</div>
-                <h3>Personalize it with stories, photos, and music</h3>
-                <p>Add memories, upload photos, share favorite quotes, and include music to make it truly special.</p>
+                <h3>{% trans "Personalize it with stories, photos, and music" %}</h3>
+                <p>{% trans "Add memories, upload photos, share favorite quotes, and include music to make it truly special." %}</p>
             </div>
-            
+
             <div class="step-card">
                 <div class="step-number">3</div>
-                <h3>Share it with loved ones and keep the memory alive forever</h3>
-                <p>Invite family and friends to view, contribute, and celebrate their legacy together.</p>
+                <h3>{% trans "Share it with loved ones and keep the memory alive forever" %}</h3>
+                <p>{% trans "Invite family and friends to view, contribute, and celebrate their legacy together." %}</p>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 3rem;">
             {% if user.is_authenticated %}
             <a href="{% url 'create_memorial' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-plus me-2"></i>Start Your Memorial — It's Free
+                <i class="fas fa-plus me-2"></i>{% trans "Start Your Memorial — It's Free" %}
             </a>
             {% else %}
             <a href="{% url 'signup' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-user-plus me-2"></i>Start Your Memorial — It's Free
+                <i class="fas fa-user-plus me-2"></i>{% trans "Start Your Memorial — It's Free" %}
             </a>
             {% endif %}
         </div>
@@ -598,29 +586,29 @@
 <!-- Testimonials Section -->
 <section class="testimonials-section">
     <div class="testimonials-container">
-        <h2 class="section-title">What Families Say</h2>
-        <p class="section-subtitle">Real stories from people honoring their loved ones</p>
-        
+        <h2 class="section-title">{% trans "What Families Say" %}</h2>
+        <p class="section-subtitle">{% trans "Real stories from people honoring their loved ones" %}</p>
+
         <div class="testimonials-grid">
             <div class="testimonial-card">
                 <p class="testimonial-text">
-                    "Creating a page for my father helped us all share stories and photos that brought comfort. Memorial Heritage made it simple and meaningful."
+                    {% trans "Creating a page for my father helped us all share stories and photos that brought comfort. Memorial Heritage made it simple and meaningful." %}
                 </p>
-                <p class="testimonial-author">— Anna L., California</p>
-            </div>
-            
-            <div class="testimonial-card">
-                <p class="testimonial-text">
-                    "It feels like our loved one is still with us — through the memories we revisit every day."
-                </p>
-                <p class="testimonial-author">— David P., London</p>
+                <p class="testimonial-author">— {% trans "Anna L., California" %}</p>
             </div>
 
             <div class="testimonial-card">
                 <p class="testimonial-text">
-                    "This platform gave our family a place to gather and remember together, even though we live in different countries."
+                    {% trans "It feels like our loved one is still with us — through the memories we revisit every day." %}
                 </p>
-                <p class="testimonial-author">— Maria S., Buenos Aires</p>
+                <p class="testimonial-author">— {% trans "David P., London" %}</p>
+            </div>
+
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    {% trans "This platform gave our family a place to gather and remember together, even though we live in different countries." %}
+                </p>
+                <p class="testimonial-author">— {% trans "Maria S., Buenos Aires" %}</p>
             </div>
         </div>
     </div>
@@ -629,23 +617,23 @@
 <!-- Final CTA Section -->
 <section class="cta-section">
     <div class="cta-content">
-        <h2>Keep Their Memory Alive, Forever</h2>
-        <p>Celebrate the lives of those who've passed by creating a timeless digital space of remembrance. Start today and let their legacy inspire future generations.</p>
-        
+        <h2>{% trans "Keep Their Memory Alive, Forever" %}</h2>
+        <p>{% trans "Celebrate the lives of those who've passed by creating a timeless digital space of remembrance. Start today and let their legacy inspire future generations." %}</p>
+
         <div class="cta-buttons">
             {% if user.is_authenticated %}
             <a href="{% url 'create_memorial' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-plus me-2"></i>Create a Tribute
+                <i class="fas fa-plus me-2"></i>{% trans "Create a Tribute" %}
             </a>
             <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
-                <i class="fas fa-search me-2"></i>Explore Memorials
+                <i class="fas fa-search me-2"></i>{% trans "Explore Memorials" %}
             </a>
             {% else %}
             <a href="{% url 'signup' %}" class="btn-hero btn-primary-hero">
-                <i class="fas fa-user-plus me-2"></i>Create a Tribute
+                <i class="fas fa-user-plus me-2"></i>{% trans "Create a Tribute" %}
             </a>
             <a href="{% url 'browse' %}" class="btn-hero btn-secondary-hero">
-                <i class="fas fa-search me-2"></i>Explore Memorials
+                <i class="fas fa-search me-2"></i>{% trans "Explore Memorials" %}
             </a>
             {% endif %}
         </div>

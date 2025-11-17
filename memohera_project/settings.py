@@ -129,16 +129,17 @@ AUTO_APPROVE_MEMORIALS = True
 
 LANGUAGES = [
     ('en', _('English')),
-    ('zh-cn', _('中文 (简体)')),
-    ('es', _('Español')),
-    ('ar', _('العربية')),
-    ('fr', _('Français')),
-    ('de', _('Deutsch')),
-    ('pt', _('Português (Brasil)')),
-    ('ru', _('Русский')),
-    ('ja', _('日本語')),
-    ('hi', _('हिन्दी')),
-    ('el', _('Ελληνικά')),
+    # ('el', _('Ελληνικά')),
+    # ('zh-cn', _('中文 (简体)')),
+    # ('es', _('Español')),
+    # ('ar', _('العربية')),
+    # ('fr', _('Français')),
+    # ('de', _('Deutsch')),
+    # ('pt', _('Português (Brasil)')),
+    # ('ru', _('Русский')),
+    # ('ja', _('日本語')),
+    # ('hi', _('हिन्दी')),
+
 ]
 
 LANGUAGE_FLAGS = {

@@ -8,7 +8,11 @@
 
     {% if memorials %}
         <p class="text-muted mb-4">
-            You have submitted {{ memorials.count }} memorial{{ memorials.count|pluralize }}.
+            {% blocktrans count counter=memorials.count %}
+            You have submitted {{ counter }} memorial.
+            {% plural %}
+            You have submitted {{ counter }} memorials.
+            {% endblocktrans %}
         </p>
         
         <!-- Memorial List -->
@@ -23,7 +27,7 @@
                         <p class="memorial-story">{{ memorial.story }}</p>
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <small class="text-muted">
-                                Submitted {{ memorial.created_at|timesince }} ago
+                                {% blocktrans with time=memorial.created_at|timesince %}Submitted {{ time }} ago{% endblocktrans %}
                             </small>
                             <span class="badge {% if memorial.approved %}bg-success{% else %}bg-warning text-dark{% endif %}">
                                 {% if memorial.approved %}
@@ -123,7 +127,7 @@ function shareMemorial(memorialId) {
         })
         .catch(error => {
             console.error('Detailed error:', error);
-            alert('Sorry, sharing is not available right now.');
+            alert('{% trans "Sorry, sharing is not available right now." %}');
         });
 }
 </script>

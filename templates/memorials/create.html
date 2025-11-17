@@ -1,21 +1,17 @@
 {% extends "base.html" %}
 {% load tz %}
 {% load i18n %}
-<!-- Change static text to translatable -->
-<h1>{% trans "Browse Memorials" %}</h1>
-<button type="submit" class="btn btn-primary">{% trans "Search" %}</button>
-<span>{% trans "No memorials found" %}</span>
 
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h1>Create a Memorial</h1>
+    <h1>{% trans "Create a Memorial" %}</h1>
     
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
         <!-- Basic Memorial Information -->
         <div style="margin-bottom: 30px;">
-            <h3 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">Memorial Information</h3>
+            <h3 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">{% trans "Memorial Information" %}</h3>
             
             {% for field in form %}
                 {% if field.name != 'related_memorial' and field.name != 'relationship_type' %}
@@ -41,17 +37,17 @@
         {% if enable_family_relationships and user_memorials %}
             <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
                 <h3 style="color: #333; margin-bottom: 15px;">
-                    Family Connection (Optional)
+                    {% trans "Family Connection (Optional)" %}
                 </h3>
                 
                 <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
-                    <strong>Connect family members:</strong> If this person is related to someone you've already added, you can create that connection here.
+                    <strong>{% trans "Connect family members:" %}</strong> {% trans "If this person is related to someone you've already added, you can create that connection here." %}
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
                         <label for="{{ form.related_memorial.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px;">
-                            Family Member
+                            {% trans "Family Member" %}
                         </label>
                         {{ form.related_memorial }}
                         {% if form.related_memorial.errors %}
@@ -63,7 +59,7 @@
                     
                     <div>
                         <label for="{{ form.relationship_type.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px;">
-                            Relationship
+                            {% trans "Relationship" %}
                         </label>
                         {{ form.relationship_type }}
                         {% if form.relationship_type.errors %}
@@ -75,13 +71,13 @@
                 </div>
                 
                 <small style="color: #666; display: block; margin-top: 10px;">
-                    <strong>Example:</strong> If you're adding your father and you already have your grandfather's memorial, select your grandfather and choose "Child".
+                    <strong>{% trans "Example:" %}</strong> {% trans "If you're adding your father and you already have your grandfather's memorial, select your grandfather and choose \"Child\"." %}
                 </small>
             </div>
         {% elif enable_family_relationships %}
             <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
                 <div style="text-align: center; color: #666;">
-                    <strong>Family Connections:</strong> After you create your first memorial, you'll be able to link family members together when creating additional memorials.
+                    <strong>{% trans "Family Connections:" %}</strong> {% trans "After you create your first memorial, you'll be able to link family members together when creating additional memorials." %}
                 </div>
             </div>
         {% endif %}
@@ -96,10 +92,10 @@
         <!-- Submit Button -->
         <div style="text-align: center; padding-top: 20px; border-top: 1px solid #eee;">
             <button type="submit" style="background: #007bff; color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 5px; cursor: pointer;">
-                Create Memorial
+                {% trans "Create Memorial" %}
             </button>
             <div style="color: #666; font-size: 14px; margin-top: 10px;">
-                Your memorial will be reviewed before being published
+                {% trans "Your memorial will be reviewed before being published" %}
             </div>
         </div>
     </form>

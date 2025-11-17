@@ -286,7 +286,9 @@ class Memorial(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.full_name} (by {self.created_by.username})"
+        dob_str = self.dob.strftime('%b %d, %Y') if self.dob else '?'
+        dod_str = self.dod.strftime('%b %d, %Y') if self.dod else '?'
+        return f"{self.full_name} ({dob_str} – {dod_str})"
     
     def get_primary_photo(self):
         '''Get the primary photo, or first uploaded if none marked as primary'''

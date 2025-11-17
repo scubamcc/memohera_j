@@ -730,6 +730,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             "id": {{ rel.memorial.id }},
                             "type": "{{ rel.type|escapejs }}",
                             "name": "{{ rel.memorial.full_name|escapejs }}",
+                            "dob": "{{ rel.dob|escapejs }}",
                             "dates": "{{ rel.memorial.dob|date:'Y' }} - {{ rel.memorial.dod|date:'Y' }}",
                             "verification": {
                                 "icon": "{{ rel.verification_badge.icon }}",
@@ -843,7 +844,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 ${rel.name}
                                             </a>
                                         </div>
-                                        ${rel.dates ? `<div style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">${rel.dates}</div>` : ''}
+                                        ${rel.dob ? `<div style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">DOB: ${rel.dob}</div>` : ''}
+                                        ${rel.dates ? `<div style="font-size: 0.85rem; color: #999; margin-top: 0.15rem;">${rel.dates}</div>` : ''}
                                     </div>
                                     ${rel.verification ? `
                                         <span class="badge bg-${rel.verification.color}" style="font-size: 0.7rem; padding: 0.35rem 0.6rem; white-space: nowrap;" title="${rel.verification.title}">
