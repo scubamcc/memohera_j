@@ -415,7 +415,15 @@
                 {% elif package.tier == 'free' %}
                 <button class="btn-manage" disabled>Always Free</button>
                 {% else %}
-                <a href="{% url 'create_checkout' package.id %}" class="btn-upgrade">
+                <!-- BEFORE -->
+                <!-- <a href="{% url 'create_checkout' package.id %}" class="btn-upgrade">
+                    Upgrade Now
+                </a> -->
+
+                <!-- AFTER -->
+                <a href="#" class="btn-upgrade" 
+                style="pointer-events: none; opacity: 0.6; cursor: not-allowed; background: #ccc;" 
+                title="Free for all users">
                     Upgrade Now
                 </a>
                 {% endif %}

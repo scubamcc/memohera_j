@@ -349,7 +349,15 @@
                 Always Free
             </button>
             {% else %}
-            <a href="{% url 'create_checkout' package.id %}" class="cta-button primary">
+            <!-- BEFORE -->
+            <!-- <a href="{% url 'create_checkout' package.id %}" class="cta-button primary">
+                Upgrade Now
+            </a> -->
+
+            <!-- AFTER -->
+            <a href="#" class="cta-button primary" 
+            style="pointer-events: none; opacity: 0.6; cursor: not-allowed; background: #ccc;" 
+            title="Free for all users">
                 Upgrade Now
             </a>
             {% endif %}

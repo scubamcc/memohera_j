@@ -257,7 +257,15 @@
 
         {% else %}
             <p style="color: #6c757d; margin-bottom: 1rem;">You don't have an active subscription.</p>
+            <!-- BEFORE
             <a href="{% url 'pricing_page' %}" class="action-button primary">
+                View Pricing Plans
+            </a> -->
+
+            <!-- AFTER -->
+            <a href="#" class="action-button primary" 
+            style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" 
+            title="Free for all users">
                 View Pricing Plans
             </a>
         {% endif %}

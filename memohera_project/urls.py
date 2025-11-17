@@ -13,11 +13,12 @@ from memorials.views_old import (
     memorial_share, get_social_sharing_links, privacy_policy, change_password, edit_memorial,
     suggest_relationship, manage_relationship_suggestions, approve_relationship_suggestion,
     reject_relationship_suggestion, family_tree_view, notifications_list, mark_notification_read,
-    mark_all_notifications_read, notification_settings, memorial_reminder_settings, upgrade_to_premium,
+    mark_all_notifications_read,  memorial_reminder_settings, upgrade_to_premium,
     smart_match_suggestions, accept_smart_match, dismiss_smart_match, archive_all_smart_matches,
     pricing_page, create_checkout_session, payment_success, subscription_dashboard,
     cancel_subscription,memorial_photo_gallery,upload_memorial_photo,upload_multiple_memorial_photos,
-    delete_memorial_photo,update_memorial_photo,reorder_memorial_photos,get_memorial_photos_json
+    delete_memorial_photo,update_memorial_photo,reorder_memorial_photos,get_memorial_photos_json,
+    notification_settings
 )
 
 from memorials import webhook
