@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf.urls.i18n import i18n_patterns
+from django.conf import settings
 from memorials.views_old import (
     home, create_memorial, browse_memorials, about, signup, my_memorials, 
     add_family_relationship, approve_family_relationship, logout_view,
@@ -22,9 +23,16 @@ from memorials.views_old import (
 from memorials import webhook
 
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    # Language switching URL
+urlpatterns = []
+
+# Only expose admin in development/DEBUG mode (not in production for security)
+if settings.DEBUG:
+    urlpatterns += [
+        path('admin/', admin.site.urls),
+    ]
+
+# Language switching URL
+urlpatterns += [
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 
@@ -99,4 +107,3 @@ urlpatterns += i18n_patterns(
 urlpatterns += [
     path('webhook/stripe/', webhook.stripe_webhook, name='stripe_webhook'),
 ]
-

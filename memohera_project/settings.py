@@ -263,7 +263,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
 else:
     # Local development settings
     print("=== LOCAL DEVELOPMENT MODE ===")
-    DEBUG = True
+    DEBUG = False
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
     DATABASES = {
         'default': {
