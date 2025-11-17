@@ -239,7 +239,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     
     # Security settings
     SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
-    DEBUG = False
+    DEBUG = True
     ALLOWED_HOSTS = ['.railway.app', 
                      'memoheraj-production.up.railway.app',
                      'https://memohera.com', 
@@ -263,7 +263,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
 else:
     # Local development settings
     print("=== LOCAL DEVELOPMENT MODE ===")
-    DEBUG = False
+    DEBUG = True
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
     DATABASES = {
         'default': {
